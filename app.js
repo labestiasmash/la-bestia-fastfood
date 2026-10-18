@@ -7,7 +7,7 @@
 // 1. Configuración del Local / Restaurante
 const RESTAURANT_CONFIG = {
   name: 'La Bestia Fast Food',
-  // Número oficial para WhatsApp (51 + 9 dígitos, SIN ESPACIOS)
+  // Número oficial para WhatsApp (código país 51 + 9 dígitos, SIN ESPACIOS)
   phone: '51968495402',
   displayPhone: '968 495 402',
   schedule: 'Lun - Dom: 6:00 PM - 11:30 PM',
@@ -17,8 +17,8 @@ const RESTAURANT_CONFIG = {
   plinNumber: '968 495 402',
   bcpAccount: '194-98765432-0-88',
   
-  // Pega aquí tu enlace de Google Sheets publicado como CSV:
-  sheetCsvUrl: localStorage.getItem('la_bestia_sheet_csv') || ''
+  // 📊 TU ENLACE DE GOOGLE SHEETS EN CSV:
+  sheetCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStAjBLrvpS8y2I8QAgzOOl1slg75KEpx23h2hxtb1tkmqZwHKQ9dkR4nfF5gryLeVjxgaiA0rCFBhU/pub?gid=0&single=true&output=csv'
 };
 
 // 2. Conversor automático de enlaces de Google Drive a imágenes reales
