@@ -8,12 +8,12 @@
 // 1. Configuración del Local / Restaurante
 const RESTAURANT_CONFIG = {
   name: 'La Bestia Fast Food',
-  phone: '51987654321', // WhatsApp: Código país 51 + 9 dígitos
+  phone: '51968 495 402', // WhatsApp: Código país 51 + 9 dígitos
   schedule: 'Lun - Dom: 6:00 PM - 11:30 PM',
   deliveryCost: 5.00,
   pickupAddress: 'Av. Las Palmeras 830, Los Olivos - Lima',
-  yapeNumber: '987 654 321',
-  plinNumber: '987 654 321',
+  yapeNumber: '968 495 402',
+  plinNumber: '968 495 402',
   bcpAccount: '194-98765432-0-88'
 };
 
