@@ -1,0 +1,91 @@
+/* ==========================================================================
+   LA BESTIA FAST FOOD - ESTILOS PERSONALIZADOS Y ANIMACIONES
+   ========================================================================== */
+
+/* Variables */
+:root {
+  --color-primary: #eab308; /* Yellow 500 */
+  --color-primary-hover: #ca8a04; /* Yellow 600 */
+  --color-accent-red: #ef4444; /* Red 500 */
+  --color-dark-bg: #0c0a09; /* Stone 950 */
+  --color-dark-surface: #1c1917; /* Stone 900 */
+}
+
+/* Tipografía base */
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-dark-bg);
+  color: #f5f5f4;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.font-brand, h1, h2, h3, h4 {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #1c1917;
+}
+::-webkit-scrollbar-thumb {
+  background: #44403c;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Animaciones y Transiciones de Modales / Drawers */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: opacity 0.25s ease-out;
+}
+
+/* Drawer lateral derecho para Carrito */
+.drawer-content {
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.drawer-open .drawer-content {
+  transform: translateX(0);
+}
+
+/* Bottom Sheet / Modal para Personalización */
+.sheet-content {
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sheet-open .sheet-content {
+  transform: translateY(0);
+}
+
+@media (min-width: 640px) {
+  .sheet-content {
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+  }
+  .sheet-open .sheet-content {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Efecto de pulsación táctil */
+.tap-active:active {
+  transform: scale(0.97);
+}
