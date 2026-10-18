@@ -1,0 +1,6 @@
+{
+  "name": "La Bestia Fast Food - Menú Digital",
+  "description": "Menú digital interactivo para La Bestia Fast Food con hamburguesas, alitas, salchipapas, combos bestiales y pedidos directos a WhatsApp.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
