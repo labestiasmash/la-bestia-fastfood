@@ -2,286 +2,123 @@
  * ==========================================================================
  * LA BESTIA FAST FOOD - Lógica Frontend Vanilla JavaScript
  * ==========================================================================
- * Desarrollado para GitHub Pages (100% estático, sin backend ni dependencias)
  */
 
 // 1. Configuración del Local / Restaurante
 const RESTAURANT_CONFIG = {
   name: 'La Bestia Fast Food',
-  phone: '51968 495 402', // WhatsApp: Código país 51 + 9 dígitos
+  // Número oficial para WhatsApp (51 + 9 dígitos, SIN ESPACIOS)
+  phone: '51968495402',
+  displayPhone: '968 495 402',
   schedule: 'Lun - Dom: 6:00 PM - 11:30 PM',
   deliveryCost: 5.00,
   pickupAddress: 'Av. Las Palmeras 830, Los Olivos - Lima',
   yapeNumber: '968 495 402',
   plinNumber: '968 495 402',
-  bcpAccount: '194-98765432-0-88'
+  bcpAccount: '194-98765432-0-88',
+  
+  // Pega aquí tu enlace de Google Sheets publicado como CSV:
+  sheetCsvUrl: localStorage.getItem('la_bestia_sheet_csv') || ''
 };
 
-// 2. Estructura de Datos que imita una hoja de Google Sheets
-// Campos: id, category, title, description, price, image, badge, disponible, itemType
-const MENU_DATA = [
-  // 🔥 COMBOS BESTIALES
+// 2. Conversor automático de enlaces de Google Drive a imágenes reales
+function resolveImageUrl(url) {
+  if (!url || typeof url !== 'string' || url.trim() === '') {
+    return 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=700&q=80';
+  }
+  const clean = url.trim();
+  const driveFileMatch = clean.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  const driveIdMatch = clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  const fileId = (driveFileMatch && driveFileMatch[1]) || (driveIdMatch && driveIdMatch[1]);
+
+  if (fileId) {
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+  }
+  return clean;
+}
+
+// 3. Catálogo inicial por defecto
+let MENU_DATA = [
   {
-    id: 'combo-bestia',
+    id: '1',
     category: 'combos',
     itemType: 'combo',
-    title: 'Combo Bestia Suprema',
-    description: 'Hamburguesa doble carne (240g), doble queso cheddar fundido, tocino crocante, aros de cebolla crispy, papas fritas XL y gaseosa 500ml a elección.',
-    price: 35.00,
+    title: 'Combo Dúo Bestia',
+    description: '2 Hamburguesas Clásicas + 1 Salchipapa Personal + 2 Bebidas heladas.',
+    price: 35.90,
     image: 'https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&w=700&q=80',
-    badge: 'MÁS VENDIDO',
-    disponible: true,
-    allowsDrink: true,
-    allowsCremas: true,
-    allowsExtras: true
-  },
-  {
-    id: 'combo-alitas-duo',
-    category: 'combos',
-    itemType: 'combo',
-    title: 'Combo Alitas Bestiales (8 und)',
-    description: '8 alitas crocantes bañadas en salsa a elección (Acevichadas, BBQ, Pasión Maracuyá o Búfalo) + porción de papas rústicas y bebida 500ml.',
-    price: 32.50,
-    image: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=700&q=80',
     badge: 'PROMO',
     disponible: true,
     allowsDrink: true,
-    allowsWingSauce: true,
     allowsCremas: true,
     allowsExtras: true
   },
   {
-    id: 'combo-salchi-monster',
-    category: 'combos',
-    itemType: 'combo',
-    title: 'Combo Salchipapa La Fiera',
-    description: 'Montaña de papas doradas con abundante salchicha frankfurter, queso cheddar fundido, huevo frito montado, todas las cremas y bebida.',
-    price: 29.50,
-    image: 'https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=700&q=80',
-    badge: 'FAVORITO',
-    disponible: true,
-    allowsDrink: true,
-    allowsCremas: true,
-    allowsExtras: true
-  },
-
-  // 🍔 HAMBURGUESAS
-  {
-    id: 'burg-la-bestia',
+    id: '2',
     category: 'hamburguesas',
     itemType: 'hamburguesa',
-    title: 'Hamburguesa La Bestia BBQ',
-    description: 'Doble carne de res a la plancha, tiras de tocino ahumado crocante, queso cheddar fundido, aros de cebolla empanizados y salsa BBQ.',
-    price: 26.00,
-    image: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=700&q=80',
-    badge: 'MÁS VENDIDO',
-    disponible: true,
-    allowsCremas: true,
-    allowsExtras: true
-  },
-  {
-    id: 'burg-smash-classic',
-    category: 'hamburguesas',
-    itemType: 'hamburguesa',
-    title: 'Smash Cheeseburger Clásica',
-    description: 'Doble smash de res con costra crujiente caramelizada, queso cheddar derretido, cebollita blanca picadita y mayonesa casera en pan brioche.',
+    title: 'La Bestia Royal',
+    description: 'Carne artesanal 150g, huevo, queso, tocino, lechuga, tomate y papas.',
     price: 22.00,
     image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80',
-    badge: 'CLÁSICA',
-    disponible: true,
-    allowsCremas: true,
-    allowsExtras: true
-  },
-  {
-    id: 'burg-royal-bestial',
-    category: 'hamburguesas',
-    itemType: 'hamburguesa',
-    title: 'Hamburguesa Royal Callejera',
-    description: 'Carne artesanal de 180g, huevo frito montado con yema tierna, queso fundido, lechuga crocante y abundante ají pollero y tártara.',
-    price: 24.00,
-    image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=700&q=80',
-    badge: 'PROMO',
-    disponible: true,
-    allowsCremas: true,
-    allowsExtras: true
-  },
-
-  // 🍗 ALITAS & ANTOJOS
-  {
-    id: 'alitas-6',
-    category: 'alitas',
-    itemType: 'alitas',
-    title: 'Porción Alitas Crocantes (6 und)',
-    description: 'Alitas de pollo extra crujientes rebozadas, bañadas en tu salsa favorita (BBQ, Acevichadas, Pasión Maracuyá o Búfalo Picante) con ajonjolí.',
-    price: 21.00,
-    image: 'https://images.unsplash.com/photo-1527477321075-d3a7331a6256?auto=format&fit=crop&w=700&q=80',
     badge: 'MÁS VENDIDO',
     disponible: true,
-    allowsWingSauce: true,
     allowsCremas: true,
     allowsExtras: true
   },
   {
-    id: 'alitas-12',
+    id: '3',
     category: 'alitas',
     itemType: 'alitas',
-    title: 'Ronda Bestial de Alitas (12 und)',
-    description: '12 alitas extra crujientes para compartir. Elige tu salsa estrella favorita, servidas con porción de papas y cremas.',
-    price: 38.00,
+    title: 'Alitas x12 Piezas',
+    description: '12 crocantes alitas bañadas en hasta 2 salsas a elección + papas.',
+    price: 32.00,
     image: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=700&q=80',
-    badge: 'PROMO',
+    badge: 'TOP',
     disponible: true,
     allowsWingSauce: true,
     allowsCremas: true,
     allowsExtras: true
   },
   {
-    id: 'tequenos-queso',
-    category: 'alitas',
-    itemType: 'alitas',
-    title: 'Tequeños Crocantes con Queso (6 und)',
-    description: 'Tequeños fritos al momento rellenos de queso andino fundido, servidos con salsa tártara de la casa y crema de ají pollero.',
-    price: 15.00,
-    image: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=700&q=80',
-    badge: 'PARA PICAR',
-    disponible: true,
-    allowsWingSauce: false,
-    allowsCremas: true,
-    allowsExtras: false
-  },
-
-  // 🍟 SALCHIPAPAS
-  {
-    id: 'salchi-la-bestia',
+    id: '4',
     category: 'salchipapas',
     itemType: 'salchipapa',
-    title: 'Salchipapa La Bestia Salvaje',
-    description: 'Nuestra salchipapa insignia: Base de papas nativas doradas con doble salchicha frankfurter, huevo frito montado, queso cheddar fundido y tocino.',
-    price: 25.00,
+    title: 'Salchipapa Bestial',
+    description: 'Papas amarillas, salchicha frankfurter, chorizo, queso derretido y tocino.',
+    price: 24.00,
     image: 'https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=700&q=80',
-    badge: 'MÁS VENDIDO',
+    badge: 'NUEVO',
     disponible: true,
     allowsCremas: true,
     allowsExtras: true
   },
   {
-    id: 'salchi-clasica',
-    category: 'salchipapas',
-    itemType: 'salchipapa',
-    title: 'Salchipapa Clásica Callejera',
-    description: 'Generosa porción de papas fritas bien crocantes con abundante salchicha parrillera en rodajas doradas y todas las cremas que elijas.',
-    price: 18.00,
-    image: 'https://images.unsplash.com/photo-1639024471287-032f66ab750f?auto=format&fit=crop&w=700&q=80',
-    badge: 'CLÁSICA',
-    disponible: true,
-    allowsCremas: true,
-    allowsExtras: true
-  },
-  {
-    id: 'papas-cheddar-bacon',
-    category: 'salchipapas',
-    itemType: 'salchipapa',
-    title: 'Papas Cheddar & Bacon Lovers',
-    description: 'Cama de papas fritas rústicas bañadas en cremosa salsa cheddar tibia con lluvia de tocino crocante y cebollita china picada.',
-    price: 17.50,
-    image: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=700&q=80',
-    badge: 'PROMO',
-    disponible: true,
-    allowsCremas: true,
-    allowsExtras: true
-  },
-
-  // 🥤 BEBIDAS & SALSAS
-  {
-    id: 'beb-chicha',
+    id: '5',
     category: 'bebidas',
     itemType: 'bebida',
-    title: 'Chicha Morada Casera (500ml)',
-    description: 'Receta tradicional con maíz morado, piña madura, manzana criolla, canela y toques de limón fresco. Bien heladita.',
-    price: 7.00,
+    title: 'Chicha Morada 1L',
+    description: 'Chicha natural de la casa helada.',
+    price: 10.00,
     image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80',
-    badge: 'DE LA CASA',
-    disponible: true,
-    allowsDrink: false,
-    allowsCremas: false,
-    allowsExtras: false
-  },
-  {
-    id: 'beb-inca',
-    category: 'bebidas',
-    itemType: 'bebida',
-    title: 'Inca Kola Personal (500ml)',
-    description: 'La gaseosa del sabor nacional bien helada.',
-    price: 6.00,
-    image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=700&q=80',
     badge: '',
     disponible: true,
     allowsDrink: false,
     allowsCremas: false,
-    allowsExtras: false
-  },
-  {
-    id: 'beb-coca',
-    category: 'bebidas',
-    itemType: 'bebida',
-    title: 'Coca-Cola Personal (500ml)',
-    description: 'Coca-Cola sabor original bien helada.',
-    price: 6.00,
-    image: 'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?auto=format&fit=crop&w=700&q=80',
-    badge: '',
-    disponible: true,
-    allowsDrink: false,
-    allowsCremas: false,
-    allowsExtras: false
-  },
-  {
-    id: 'salsas-pack',
-    category: 'bebidas',
-    itemType: 'bebida',
-    title: 'Pack 3 Potes de Cremas Extra (2oz)',
-    description: 'Potes generosos de Mayonesa de la casa, Tártara y Crema de Ají Pollero.',
-    price: 4.50,
-    image: 'https://images.unsplash.com/photo-1472476443507-c7a5948772fc?auto=format&fit=crop&w=700&q=80',
-    badge: 'INFALTABLE',
-    disponible: true,
-    allowsDrink: false,
-    allowsCremas: true,
     allowsExtras: false
   }
 ];
 
-// Opciones de Configuración
-const WING_SAUCES_LIST = [
-  'Acevichadas Especiales',
-  'BBQ Ahumada',
-  'Pasión Maracuyá',
-  'Búfalo Picante'
-];
-
-const CREMAS_OPTIONS = [
-  'Mayonesa de la casa',
-  'Tártara criolla',
-  'Ají pollero',
-  'Salsa BBQ',
-  'Ketchup',
-  'Mostaza'
-];
-
+const WING_SAUCES_LIST = ['Acevichadas Especiales', 'BBQ Ahumada', 'Pasión Maracuyá', 'Búfalo Picante'];
+const CREMAS_OPTIONS = ['Mayonesa de la casa', 'Tártara criolla', 'Ají pollero', 'Salsa BBQ', 'Ketchup', 'Mostaza'];
 const EXTRAS_OPTIONS = [
   { id: 'extra_cheddar', name: 'Extra Queso Cheddar', price: 3.00 },
   { id: 'extra_bacon', name: 'Extra Tocino Crocante', price: 4.00 },
   { id: 'extra_fries_xl', name: 'Papas XL', price: 5.00 },
   { id: 'extra_egg', name: 'Huevo Frito', price: 2.00 }
 ];
+const COMBO_DRINKS_LIST = ['Inca Kola Personal (500ml)', 'Coca-Cola Original (500ml)', 'Chicha Morada Casera (500ml)', 'Coca-Cola Zero (500ml)'];
 
-const COMBO_DRINKS_LIST = [
-  'Inca Kola Personal (500ml)',
-  'Coca-Cola Original (500ml)',
-  'Chicha Morada Casera (500ml)',
-  'Coca-Cola Zero (500ml)'
-];
-
-// 3. Estado Global del Cliente
 let currentCategory = 'combos';
 let cart = JSON.parse(localStorage.getItem('la_bestia_cart') || '[]');
 let activeCustomizingProduct = null;
@@ -294,18 +131,93 @@ let customizeState = {
   notes: ''
 };
 
-// Formato de moneda en Soles
 function formatPrice(amount) {
   return `S/ ${Number(amount).toFixed(2)}`;
 }
 
-// Persistir carrito
 function saveCart() {
   localStorage.setItem('la_bestia_cart', JSON.stringify(cart));
   updateCartUI();
 }
 
-// 4. Renderizar Catálogo de Productos
+// Lector dinámico de Google Sheets
+async function loadProductsFromGoogleSheets() {
+  const sheetUrl = RESTAURANT_CONFIG.sheetCsvUrl;
+  if (!sheetUrl) return;
+
+  try {
+    const response = await fetch(sheetUrl);
+    if (!response.ok) throw new Error('No se pudo acceder');
+    const text = await response.text();
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length < 2) return;
+
+    const headers = parseCsvLine(lines[0]).map(h => h.toLowerCase().trim().replace(/[\s_]/g, ''));
+    const parsed = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseCsvLine(lines[i]);
+      const row = {};
+      headers.forEach((h, idx) => { row[h] = (cols[idx] || '').trim(); });
+
+      const id = row['id'] || String(i);
+      const rawCategory = row['categoria'] || row['category'] || '';
+      const title = row['titulo'] || row['title'] || '';
+      const description = row['descripcion'] || row['description'] || '';
+      const price = parseFloat(row['precio'] || row['price'] || '0') || 0;
+      const rawFoto = row['fotourl'] || row['foto'] || row['image'] || '';
+      const badge = row['badge'] || '';
+      const rawDisp = (row['disponible'] || 'SI').toUpperCase();
+      const isDisponible = rawDisp === 'SI' || rawDisp === 'TRUE' || rawDisp === '1';
+
+      if (!title) continue;
+
+      let category = 'hamburguesas';
+      const c = rawCategory.toLowerCase();
+      if (c.includes('combo')) category = 'combos';
+      else if (c.includes('alita')) category = 'alitas';
+      else if (c.includes('salchi')) category = 'salchipapas';
+      else if (c.includes('bebida')) category = 'bebidas';
+
+      parsed.push({
+        id,
+        category,
+        title,
+        description,
+        price,
+        image: resolveImageUrl(rawFoto),
+        badge,
+        disponible: isDisponible,
+        allowsDrink: category === 'combos',
+        allowsWingSauce: category === 'alitas' || title.toLowerCase().includes('alita'),
+        allowsCremas: category === 'hamburguesas' || category === 'salchipapas' || category === 'combos',
+        allowsExtras: category !== 'bebidas'
+      });
+    }
+
+    if (parsed.length > 0) {
+      MENU_DATA = parsed;
+      renderProducts();
+    }
+  } catch (err) {
+    console.warn('Aviso: usando menú local:', err);
+  }
+}
+
+function parseCsvLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') inQuotes = !inQuotes;
+    else if (char === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+    else current += char;
+  }
+  result.push(current.trim());
+  return result;
+}
+
 function renderProducts() {
   const container = document.getElementById('products-grid');
   if (!container) return;
@@ -320,13 +232,15 @@ function renderProducts() {
 
     const badgeHtml = product.badge
       ? `<span class="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-black uppercase tracking-wide shadow-lg ${
-          product.badge.toLowerCase().includes('más vendido') ? 'bg-yellow-400 text-stone-950' : 'bg-red-600 text-white'
+          product.badge.toLowerCase().includes('más vendido') || product.badge.toLowerCase().includes('top')
+            ? 'bg-yellow-400 text-stone-950 shadow-yellow-500/20'
+            : 'bg-red-600 text-white shadow-red-600/30'
         }"><i class="fa-solid fa-fire text-[10px]"></i> ${product.badge}</span>`
       : '';
 
     card.innerHTML = `
       <div class="relative aspect-[4/3] w-full overflow-hidden bg-stone-950">
-        <img src="${product.image}" alt="${product.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+        <img src="${resolveImageUrl(product.image)}" alt="${product.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=700&q=80';" />
         <div class="absolute inset-0 bg-gradient-to-t from-stone-950/85 via-transparent to-transparent pointer-events-none"></div>
         ${badgeHtml}
         <div class="absolute bottom-2.5 left-2.5 z-10">
@@ -345,7 +259,7 @@ function renderProducts() {
           </p>
         </div>
         <div class="flex items-center justify-between pt-2 border-t border-stone-800/60 mt-auto">
-          <div className="text-[11px] text-stone-500">
+          <div class="text-[11px] text-stone-500">
             ${product.allowsWingSauce ? '🍗 Salsa · ' : ''}${product.allowsDrink ? '🥤 Bebida · ' : ''}${product.allowsCremas ? '🥫 Cremas' : ''}
           </div>
           <button type="button" class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-stone-950 font-black text-xs sm:text-sm shadow-md transition-all active:scale-95">
@@ -359,7 +273,6 @@ function renderProducts() {
   });
 }
 
-// 5. Configurar Botones de Categorías
 function setupCategories() {
   const buttons = document.querySelectorAll('[data-category]');
   buttons.forEach(btn => {
@@ -376,13 +289,11 @@ function setupCategories() {
   });
 }
 
-// 6. Modal de Personalización
 function openCustomizeModal(productId) {
   const product = MENU_DATA.find(p => p.id === productId);
   if (!product) return;
   activeCustomizingProduct = product;
 
-  // Reset del estado
   customizeState = {
     drink: COMBO_DRINKS_LIST[0],
     wingSauce: WING_SAUCES_LIST[0],
@@ -392,11 +303,10 @@ function openCustomizeModal(productId) {
     notes: ''
   };
 
-  document.getElementById('modal-product-img').src = product.image;
+  document.getElementById('modal-product-img').src = resolveImageUrl(product.image);
   document.getElementById('modal-product-title').innerText = product.title;
   document.getElementById('modal-product-baseprice').innerText = `${formatPrice(product.price)} base`;
 
-  // Renderizar Alitas (Selector de Sabor)
   const wingSec = document.getElementById('customize-wings-section');
   if (product.allowsWingSauce) {
     wingSec.classList.remove('hidden');
@@ -405,7 +315,6 @@ function openCustomizeModal(productId) {
     wingSec.classList.add('hidden');
   }
 
-  // Renderizar Bebida (Para Combos)
   const drinkSec = document.getElementById('customize-drink-section');
   if (product.allowsDrink) {
     drinkSec.classList.remove('hidden');
@@ -414,7 +323,6 @@ function openCustomizeModal(productId) {
     drinkSec.classList.add('hidden');
   }
 
-  // Renderizar Cremas (Hamburguesas y Salchipapas)
   const cremasSec = document.getElementById('customize-cremas-section');
   if (product.allowsCremas) {
     cremasSec.classList.remove('hidden');
@@ -423,7 +331,6 @@ function openCustomizeModal(productId) {
     cremasSec.classList.add('hidden');
   }
 
-  // Renderizar Extras (+S/ 3.00, +S/ 4.00, +S/ 5.00, +S/ 2.00)
   const extraSec = document.getElementById('customize-extras-section');
   if (product.allowsExtras) {
     extraSec.classList.remove('hidden');
@@ -460,16 +367,11 @@ function renderWingSauceOptions() {
     }`;
     btn.innerHTML = `
       <span class="text-xs">${sauce}</span>
-      <div class="w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-        isSelected ? 'border-yellow-400 bg-yellow-400 text-stone-950' : 'border-stone-600'
-      }">
+      <div class="w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-yellow-400 bg-yellow-400 text-stone-950' : 'border-stone-600'}">
         ${isSelected ? '<i class="fa-solid fa-check text-[9px] font-black"></i>' : ''}
       </div>
     `;
-    btn.onclick = () => {
-      customizeState.wingSauce = sauce;
-      renderWingSauceOptions();
-    };
+    btn.onclick = () => { customizeState.wingSauce = sauce; renderWingSauceOptions(); };
     container.appendChild(btn);
   });
 }
@@ -486,16 +388,11 @@ function renderDrinkOptions() {
     }`;
     btn.innerHTML = `
       <span class="text-xs sm:text-sm">${drink}</span>
-      <div class="w-4 h-4 rounded-full border flex items-center justify-center ${
-        isSelected ? 'border-yellow-400 bg-yellow-400 text-stone-950' : 'border-stone-600'
-      }">
+      <div class="w-4 h-4 rounded-full border flex items-center justify-center ${isSelected ? 'border-yellow-400 bg-yellow-400 text-stone-950' : 'border-stone-600'}">
         ${isSelected ? '<i class="fa-solid fa-check text-[9px] font-black"></i>' : ''}
       </div>
     `;
-    btn.onclick = () => {
-      customizeState.drink = drink;
-      renderDrinkOptions();
-    };
+    btn.onclick = () => { customizeState.drink = drink; renderDrinkOptions(); };
     container.appendChild(btn);
   });
 }
@@ -511,19 +408,14 @@ function renderCremasOptions() {
       isChecked ? 'bg-stone-800 border-yellow-500/70 text-white font-medium' : 'bg-stone-950/60 border-stone-800 text-stone-400'
     }`;
     btn.innerHTML = `
-      <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
-        isChecked ? 'bg-yellow-400 border-yellow-400 text-stone-950' : 'border-stone-600'
-      }">
+      <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${isChecked ? 'bg-yellow-400 border-yellow-400 text-stone-950' : 'border-stone-600'}">
         ${isChecked ? '<i class="fa-solid fa-check text-[9px] font-bold"></i>' : ''}
       </div>
       <span class="text-xs">${crema}</span>
     `;
     btn.onclick = () => {
-      if (isChecked) {
-        customizeState.cremas = customizeState.cremas.filter(c => c !== crema);
-      } else {
-        customizeState.cremas.push(crema);
-      }
+      if (isChecked) customizeState.cremas = customizeState.cremas.filter(c => c !== crema);
+      else customizeState.cremas.push(crema);
       renderCremasOptions();
     };
     container.appendChild(btn);
@@ -542,9 +434,7 @@ function renderExtrasOptions() {
     }`;
     btn.innerHTML = `
       <div class="flex items-center gap-2.5">
-        <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
-          isChecked ? 'bg-yellow-400 border-yellow-400 text-stone-950' : 'border-stone-600'
-        }">
+        <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${isChecked ? 'bg-yellow-400 border-yellow-400 text-stone-950' : 'border-stone-600'}">
           ${isChecked ? '<i class="fa-solid fa-check text-[9px] font-bold"></i>' : ''}
         </div>
         <span class="text-xs sm:text-sm">${extra.name}</span>
@@ -552,11 +442,8 @@ function renderExtrasOptions() {
       <span class="text-xs font-bold text-yellow-400 tabular-nums">+${formatPrice(extra.price)}</span>
     `;
     btn.onclick = () => {
-      if (isChecked) {
-        customizeState.extras = customizeState.extras.filter(e => e.id !== extra.id);
-      } else {
-        customizeState.extras.push(extra);
-      }
+      if (isChecked) customizeState.extras = customizeState.extras.filter(e => e.id !== extra.id);
+      else customizeState.extras.push(extra);
       renderExtrasOptions();
       updateCustomizeTotal();
     };
@@ -621,7 +508,6 @@ function setupCustomizeHandlers() {
   };
 }
 
-// 7. Carrito Flotante y Drawer
 function updateCartUI() {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
@@ -629,7 +515,6 @@ function updateCartUI() {
   const deliveryFee = isDelivery ? RESTAURANT_CONFIG.deliveryCost : 0;
   const total = subtotal + deliveryFee;
 
-  // Floating sticky bottom bar
   const floatingBar = document.getElementById('floating-cart-bar');
   if (totalItems > 0) {
     floatingBar.classList.remove('hidden');
@@ -639,7 +524,6 @@ function updateCartUI() {
     floatingBar.classList.add('hidden');
   }
 
-  // Drawer items render
   renderCartDrawerItems(subtotal, deliveryFee, total);
 }
 
@@ -677,7 +561,7 @@ function renderCartDrawerItems(subtotal, deliveryFee, total) {
     itemCard.innerHTML = `
       <div class="flex items-start justify-between gap-3">
         <div class="flex gap-2.5">
-          <img src="${item.image}" alt="${item.title}" class="w-12 h-12 rounded-lg object-cover border border-stone-800 shrink-0" />
+          <img src="${resolveImageUrl(item.image)}" alt="${item.title}" class="w-12 h-12 rounded-lg object-cover border border-stone-800 shrink-0" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=700&q=80';" />
           <div>
             <h4 class="font-bold text-sm text-white font-brand">${item.title}</h4>
             <span class="text-xs text-yellow-400 font-bold">${formatPrice(item.unitPrice)} c/u</span>
@@ -704,7 +588,6 @@ function renderCartDrawerItems(subtotal, deliveryFee, total) {
     container.appendChild(itemCard);
   });
 
-  // Totales
   document.getElementById('summary-subtotal').innerText = formatPrice(subtotal);
   document.getElementById('summary-delivery').innerText = deliveryFee > 0 ? formatPrice(deliveryFee) : 'Gratis / Recojo';
   document.getElementById('summary-total').innerText = formatPrice(total);
@@ -714,9 +597,7 @@ window.changeQuantity = function(cartItemId, delta) {
   const item = cart.find(i => i.cartItemId === cartItemId);
   if (!item) return;
   item.quantity += delta;
-  if (item.quantity <= 0) {
-    cart = cart.filter(i => i.cartItemId !== cartItemId);
-  }
+  if (item.quantity <= 0) cart = cart.filter(i => i.cartItemId !== cartItemId);
   saveCart();
 };
 
@@ -740,7 +621,7 @@ function closeCartDrawer() {
   setTimeout(() => drawer.classList.add('hidden'), 300);
 }
 
-// 8. Envío por WhatsApp
+// 10. Envío por WhatsApp (CORREGIDO PARA EVITAR ERROR 404)
 function submitOrderViaWhatsApp() {
   if (cart.length === 0) return;
 
@@ -752,7 +633,6 @@ function submitOrderViaWhatsApp() {
   const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
   const generalNotes = document.getElementById('customer-notes').value.trim();
 
-  // Validación
   if (!nameInput.value.trim()) {
     alert('Por favor ingresa tu nombre completo.');
     nameInput.focus();
@@ -812,18 +692,53 @@ function submitOrderViaWhatsApp() {
     msg += `📸 _*IMPORTANTE:* Adjunto la constancia de transferencia BCP a continuación antes de preparar mi pedido._ 🚀\n`;
   }
 
-  const waUrl = `https://wa.me/${RESTAURANT_CONFIG.phone}?text=${encodeURIComponent(msg)}`;
+  // ⚠️ LIMPIEZA TOTAL: Solo dígitos, sin espacios ni caracteres especiales
+  const cleanPhone = String(RESTAURANT_CONFIG.phone).replace(/\D/g, '');
+  
+  // URL universal que abre la app en móviles o WhatsApp Web en PC
+  const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
   window.open(waUrl, '_blank');
 }
 
-// Inicialización general
+// 11. Modal de Sincronización con Google Sheets en Vivo
+function setupGoogleSheetsManager() {
+  const syncBtn = document.getElementById('open-sheets-config-btn');
+  if (!syncBtn) return;
+
+  syncBtn.addEventListener('click', () => {
+    const currentUrl = RESTAURANT_CONFIG.sheetCsvUrl || '';
+    const newUrl = prompt(
+      '📊 CONEXIÓN CON GOOGLE SHEETS:\n\nPega aquí el enlace de tu Google Sheet publicado como CSV:\n(En tu Sheet: Archivo > Compartir > Publicar en la web > Formato CSV)',
+      currentUrl
+    );
+
+    if (newUrl !== null) {
+      const cleanUrl = newUrl.trim();
+      RESTAURANT_CONFIG.sheetCsvUrl = cleanUrl;
+      localStorage.setItem('la_bestia_sheet_csv', cleanUrl);
+
+      if (cleanUrl) {
+        alert('🔄 Conectando con tu Google Sheet...');
+        loadProductsFromGoogleSheets();
+      } else {
+        alert('Se restableció el catálogo por defecto.');
+        location.reload();
+      }
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   setupCategories();
   renderProducts();
   setupCustomizeHandlers();
   updateCartUI();
+  setupGoogleSheetsManager();
 
-  // Event Listeners
+  if (RESTAURANT_CONFIG.sheetCsvUrl) {
+    loadProductsFromGoogleSheets();
+  }
+
   document.getElementById('floating-cart-bar')?.addEventListener('click', openCartDrawer);
   document.getElementById('close-drawer-btn')?.addEventListener('click', closeCartDrawer);
   document.getElementById('close-modal-btn')?.addEventListener('click', closeCustomizeModal);
@@ -831,23 +746,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('modal-backdrop')?.addEventListener('click', closeCustomizeModal);
   document.getElementById('submit-order-whatsapp-btn')?.addEventListener('click', submitOrderViaWhatsApp);
 
-  // Delivery toggle
   const deliveryRadios = document.querySelectorAll('input[name="delivery-type"]');
   deliveryRadios.forEach(radio => {
     radio.addEventListener('change', () => {
       const addressBox = document.getElementById('delivery-address-box');
-      if (radio.value === 'delivery') {
-        addressBox?.classList.remove('hidden');
-      } else {
-        addressBox?.classList.add('hidden');
-      }
+      if (radio.value === 'delivery') addressBox?.classList.remove('hidden');
+      else addressBox?.classList.add('hidden');
       updateCartUI();
     });
   });
 
-  // Copiar números de pago
   document.getElementById('copy-yape-btn')?.addEventListener('click', () => {
     navigator.clipboard.writeText(RESTAURANT_CONFIG.yapeNumber);
-    alert(`¡Número ${RESTAURANT_CONFIG.yapeNumber} copiado!`);
+    alert(`¡Número ${RESTAURANT_CONFIG.yapeNumber} copiado para Yape / Plin!`);
   });
 });
