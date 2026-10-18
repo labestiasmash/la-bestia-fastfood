@@ -2,12 +2,13 @@
  * ==========================================================================
  * LA BESTIA FAST FOOD - Lógica Frontend Vanilla JavaScript
  * ==========================================================================
+ * Desarrollado para GitHub Pages (100% estático, con soporte para Google Sheets y Drive)
  */
 
 // 1. Configuración del Local / Restaurante
 const RESTAURANT_CONFIG = {
   name: 'La Bestia Fast Food',
-  // Número oficial para WhatsApp (código país 51 + 9 dígitos, SIN ESPACIOS)
+  // Número oficial para WhatsApp (solo dígitos con código de país 51 de Perú, SIN ESPACIOS)
   phone: '51968495402',
   displayPhone: '968 495 402',
   schedule: 'Lun - Dom: 6:00 PM - 11:30 PM',
@@ -17,36 +18,65 @@ const RESTAURANT_CONFIG = {
   plinNumber: '968 495 402',
   bcpAccount: '194-98765432-0-88',
   
-  // 📊 TU ENLACE DE GOOGLE SHEETS EN CSV:
-  sheetCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStAjBLrvpS8y2I8QAgzOOl1slg75KEpx23h2hxtb1tkmqZwHKQ9dkR4nfF5gryLeVjxgaiA0rCFBhU/pub?gid=0&single=true&output=csv'
+  /**
+   * 📊 ENLACE DE TU GOOGLE SHEET PUBLICADO EN CSV:
+   * Para conectar tu hoja de cálculo:
+   * 1. En Google Sheets ve a: Archivo > Compartir > Publicar en la web.
+   * 2. Elige "Hoja 1" y formato "Valores separados por comas (.csv)".
+   * 3. Pega aquí el enlace resultante (o déjalo vacío para usar el menú local).
+   */
+  sheetCsvUrl: localStorage.getItem('la_bestia_sheet_csv') || 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStAjBLrvpS8y2I8QAgzOOl1slg75KEpx23h2hxtb1tkmqZwHKQ9dkR4nfF5gryLeVjxgaiA0rCFBhU/pub?gid=0&single=true&output=csv'
 };
 
-// 2. Conversor automático de enlaces de Google Drive a imágenes reales
-function resolveImageUrl(url) {
-  if (!url || typeof url !== 'string' || url.trim() === '') {
-    return 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=700&q=80';
+// 2. Función Inteligente para Convertir Enlaces de Google Drive a Imágenes Directas
+function resolveImageUrl(url, category = 'hamburguesas') {
+  if (!url || typeof url !== 'string' || url.trim() === '' || url.includes('...') || !url.startsWith('http')) {
+    if (category === 'bebidas') return 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80';
+    if (category === 'alitas') return 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=700&q=80';
+    if (category === 'salchipapas') return 'https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=700&q=80';
+    return 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80';
   }
+
   const clean = url.trim();
+
+  // Detectar enlaces de Google Drive en cualquier formato:
   const driveFileMatch = clean.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
   const driveIdMatch = clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  const fileId = (driveFileMatch && driveFileMatch[1]) || (driveIdMatch && driveIdMatch[1]);
+  const driveLh3Match = clean.match(/googleusercontent\.com\/d\/([a-zA-Z0-9_-]+)/);
+  const fileId = (driveFileMatch && driveFileMatch[1]) || (driveIdMatch && driveIdMatch[1]) || (driveLh3Match && driveLh3Match[1]);
 
   if (fileId) {
-    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+    return `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
+  }
+
+  return clean;
+}
+
+// Conversor de enlaces para Google Sheets (acepta tanto 'Publicar en la web' como el enlace directo 'Compartir')
+function normalizeSheetCsvUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  const clean = url.trim();
+  if (clean.includes('/pub') && clean.includes('output=csv')) {
+    return clean;
+  }
+  const match = clean.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return `https://docs.google.com/spreadsheets/d/${match[1]}/gviz/tq?tqx=out:csv`;
   }
   return clean;
 }
 
-// 3. Catálogo inicial por defecto
+// 3. Catálogo inicial (con fotos reales sincronizadas de Google Drive)
 let MENU_DATA = [
+  // 🔥 COMBOS BESTIALES
   {
     id: '1',
     category: 'combos',
     itemType: 'combo',
     title: 'Combo Dúo Bestia',
-    description: '2 Hamburguesas Clásicas + 1 Salchipapa Personal + 2 Bebidas heladas.',
+    description: '2 Hamburguesas Clásicas + 1 Salchipapa Personal + 2 Bebidas',
     price: 35.90,
-    image: 'https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&w=700&q=80',
+    image: 'https://lh3.googleusercontent.com/d/1N7SnkQyEr0WgRr7s12Nte_qiMjMVHFaC=w1000',
     badge: 'PROMO',
     disponible: true,
     allowsDrink: true,
@@ -58,7 +88,7 @@ let MENU_DATA = [
     category: 'hamburguesas',
     itemType: 'hamburguesa',
     title: 'La Bestia Royal',
-    description: 'Carne artesanal 150g, huevo, queso, tocino, lechuga, tomate y papas.',
+    description: 'Carne artesanal 150g, huevo, queso, tocino, lechuga, tomate y papas',
     price: 22.00,
     image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80',
     badge: 'MÁS VENDIDO',
@@ -71,9 +101,9 @@ let MENU_DATA = [
     category: 'alitas',
     itemType: 'alitas',
     title: 'Alitas x12 Piezas',
-    description: '12 crocantes alitas bañadas en hasta 2 salsas a elección + papas.',
+    description: '12 crocantes alitas bañadas en hasta 2 salsas a elección + papas',
     price: 32.00,
-    image: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=700&q=80',
+    image: 'https://lh3.googleusercontent.com/d/12JmafB9K4mLf-90s-ZOdaMnopDEhLazB=w1000',
     badge: 'TOP',
     disponible: true,
     allowsWingSauce: true,
@@ -85,9 +115,9 @@ let MENU_DATA = [
     category: 'salchipapas',
     itemType: 'salchipapa',
     title: 'Salchipapa Bestial',
-    description: 'Papas amarillas, salchicha frankfurter, chorizo, queso derretido y tocino.',
+    description: 'Papas amarillas, salchicha frankfurter, chorizo, queso derretido y tocino',
     price: 24.00,
-    image: 'https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=700&q=80',
+    image: 'https://lh3.googleusercontent.com/d/1Tw0yyO9cYRLntnVYnsXh7Ajg_BKwOry3=w1000',
     badge: 'NUEVO',
     disponible: true,
     allowsCremas: true,
@@ -98,7 +128,7 @@ let MENU_DATA = [
     category: 'bebidas',
     itemType: 'bebida',
     title: 'Chicha Morada 1L',
-    description: 'Chicha natural de la casa helada.',
+    description: 'Chicha natural de la casa helada',
     price: 10.00,
     image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80',
     badge: '',
@@ -109,16 +139,38 @@ let MENU_DATA = [
   }
 ];
 
-const WING_SAUCES_LIST = ['Acevichadas Especiales', 'BBQ Ahumada', 'Pasión Maracuyá', 'Búfalo Picante'];
-const CREMAS_OPTIONS = ['Mayonesa de la casa', 'Tártara criolla', 'Ají pollero', 'Salsa BBQ', 'Ketchup', 'Mostaza'];
+// Opciones de Configuración
+const WING_SAUCES_LIST = [
+  'Acevichadas Especiales',
+  'BBQ Ahumada',
+  'Pasión Maracuyá',
+  'Búfalo Picante'
+];
+
+const CREMAS_OPTIONS = [
+  'Mayonesa de la casa',
+  'Tártara criolla',
+  'Ají pollero',
+  'Salsa BBQ',
+  'Ketchup',
+  'Mostaza'
+];
+
 const EXTRAS_OPTIONS = [
   { id: 'extra_cheddar', name: 'Extra Queso Cheddar', price: 3.00 },
   { id: 'extra_bacon', name: 'Extra Tocino Crocante', price: 4.00 },
   { id: 'extra_fries_xl', name: 'Papas XL', price: 5.00 },
   { id: 'extra_egg', name: 'Huevo Frito', price: 2.00 }
 ];
-const COMBO_DRINKS_LIST = ['Inca Kola Personal (500ml)', 'Coca-Cola Original (500ml)', 'Chicha Morada Casera (500ml)', 'Coca-Cola Zero (500ml)'];
 
+const COMBO_DRINKS_LIST = [
+  'Inca Kola Personal (500ml)',
+  'Coca-Cola Original (500ml)',
+  'Chicha Morada Casera (500ml)',
+  'Coca-Cola Zero (500ml)'
+];
+
+// 4. Estado Global de la App
 let currentCategory = 'combos';
 let cart = JSON.parse(localStorage.getItem('la_bestia_cart') || '[]');
 let activeCustomizingProduct = null;
@@ -140,52 +192,65 @@ function saveCart() {
   updateCartUI();
 }
 
-// Lector dinámico de Google Sheets
+// 5. Carga Dinámica desde Google Sheets
 async function loadProductsFromGoogleSheets() {
-  const sheetUrl = RESTAURANT_CONFIG.sheetCsvUrl;
+  const sheetUrl = normalizeSheetCsvUrl(RESTAURANT_CONFIG.sheetCsvUrl);
   if (!sheetUrl) return;
 
   try {
     const response = await fetch(sheetUrl);
-    if (!response.ok) throw new Error('No se pudo acceder');
+    if (!response.ok) throw new Error('No se pudo acceder al Google Sheet');
     const text = await response.text();
+
+    if (text.includes('<!DOCTYPE') || text.includes('Sorry, the file you have requested')) {
+      throw new Error('Google devolvió error 404: La hoja aún no está publicada o requiere permiso de lectura público.');
+    }
+
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     if (lines.length < 2) return;
 
+    // Detectar encabezados
     const headers = parseCsvLine(lines[0]).map(h => h.toLowerCase().trim().replace(/[\s_]/g, ''));
     const parsed = [];
 
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCsvLine(lines[i]);
       const row = {};
-      headers.forEach((h, idx) => { row[h] = (cols[idx] || '').trim(); });
+      headers.forEach((h, idx) => {
+        row[h] = (cols[idx] || '').trim();
+      });
 
+      // Extraer campos según la hoja:
+      // ID | Categoria | Titulo | Descripcion | Precio | Foto_URL | Badge | Disponible
       const id = row['id'] || String(i);
       const rawCategory = row['categoria'] || row['category'] || '';
       const title = row['titulo'] || row['title'] || '';
       const description = row['descripcion'] || row['description'] || '';
       const price = parseFloat(row['precio'] || row['price'] || '0') || 0;
-      const rawFoto = row['fotourl'] || row['foto'] || row['image'] || '';
+      const rawFoto = row['fotourl'] || row['foto'] || row['image'] || row['img'] || '';
       const badge = row['badge'] || '';
       const rawDisp = (row['disponible'] || 'SI').toUpperCase();
-      const isDisponible = rawDisp === 'SI' || rawDisp === 'TRUE' || rawDisp === '1';
+      const isDisponible = rawDisp === 'SI' || rawDisp === 'TRUE' || rawDisp === '1' || rawDisp === 'DISPONIBLE';
 
       if (!title) continue;
 
+      // Normalizar categoría
       let category = 'hamburguesas';
       const c = rawCategory.toLowerCase();
       if (c.includes('combo')) category = 'combos';
-      else if (c.includes('alita')) category = 'alitas';
+      else if (c.includes('alita') || c.includes('antojo')) category = 'alitas';
       else if (c.includes('salchi')) category = 'salchipapas';
-      else if (c.includes('bebida')) category = 'bebidas';
+      else if (c.includes('bebida') || c.includes('salsa')) category = 'bebidas';
+      else if (c.includes('hamburguesa') || c.includes('burger')) category = 'hamburguesas';
 
       parsed.push({
         id,
         category,
+        itemType: category === 'alitas' ? 'alitas' : category === 'combos' ? 'combo' : category === 'salchipapas' ? 'salchipapa' : category === 'bebidas' ? 'bebida' : 'hamburguesa',
         title,
         description,
         price,
-        image: resolveImageUrl(rawFoto),
+        image: resolveImageUrl(rawFoto, category),
         badge,
         disponible: isDisponible,
         allowsDrink: category === 'combos',
@@ -197,33 +262,52 @@ async function loadProductsFromGoogleSheets() {
 
     if (parsed.length > 0) {
       MENU_DATA = parsed;
+      console.log(`✅ Menú sincronizado desde Google Sheets (${parsed.length} productos).`);
       renderProducts();
     }
   } catch (err) {
-    console.warn('Aviso: usando menú local:', err);
+    console.warn('Aviso: Usando catálogo por defecto (No se pudo conectar a Google Sheets):', err);
   }
 }
 
+// Parser simple para líneas CSV respetando comillas
 function parseCsvLine(line) {
   const result = [];
   let current = '';
   let inQuotes = false;
+
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
-    if (char === '"') inQuotes = !inQuotes;
-    else if (char === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
-    else current += char;
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
   }
   result.push(current.trim());
   return result;
 }
 
+// 6. Renderizar Catálogo de Productos
 function renderProducts() {
   const container = document.getElementById('products-grid');
   if (!container) return;
 
   const filtered = MENU_DATA.filter(item => item.category === currentCategory && item.disponible);
   container.innerHTML = '';
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full py-12 text-center text-stone-400 bg-stone-900/40 rounded-2xl border border-stone-800 p-6">
+        <i class="fa-solid fa-utensils text-3xl text-stone-600 mb-2"></i>
+        <p class="font-bold text-white text-sm">No hay productos disponibles en esta categoría</p>
+      </div>
+    `;
+    return;
+  }
 
   filtered.forEach(product => {
     const card = document.createElement('article');
@@ -240,7 +324,13 @@ function renderProducts() {
 
     card.innerHTML = `
       <div class="relative aspect-[4/3] w-full overflow-hidden bg-stone-950">
-        <img src="${resolveImageUrl(product.image)}" alt="${product.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=700&q=80';" />
+        <img 
+          src="${resolveImageUrl(product.image)}" 
+          alt="${product.title}" 
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+          loading="lazy" 
+          onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=700&q=80';"
+        />
         <div class="absolute inset-0 bg-gradient-to-t from-stone-950/85 via-transparent to-transparent pointer-events-none"></div>
         ${badgeHtml}
         <div class="absolute bottom-2.5 left-2.5 z-10">
@@ -273,6 +363,7 @@ function renderProducts() {
   });
 }
 
+// 7. Configurar Botones de Categorías
 function setupCategories() {
   const buttons = document.querySelectorAll('[data-category]');
   buttons.forEach(btn => {
@@ -289,11 +380,13 @@ function setupCategories() {
   });
 }
 
+// 8. Modal de Personalización
 function openCustomizeModal(productId) {
   const product = MENU_DATA.find(p => p.id === productId);
   if (!product) return;
   activeCustomizingProduct = product;
 
+  // Reset del estado
   customizeState = {
     drink: COMBO_DRINKS_LIST[0],
     wingSauce: WING_SAUCES_LIST[0],
@@ -307,6 +400,7 @@ function openCustomizeModal(productId) {
   document.getElementById('modal-product-title').innerText = product.title;
   document.getElementById('modal-product-baseprice').innerText = `${formatPrice(product.price)} base`;
 
+  // Renderizar Alitas (Selector de Sabor)
   const wingSec = document.getElementById('customize-wings-section');
   if (product.allowsWingSauce) {
     wingSec.classList.remove('hidden');
@@ -315,6 +409,7 @@ function openCustomizeModal(productId) {
     wingSec.classList.add('hidden');
   }
 
+  // Renderizar Bebida (Para Combos)
   const drinkSec = document.getElementById('customize-drink-section');
   if (product.allowsDrink) {
     drinkSec.classList.remove('hidden');
@@ -323,6 +418,7 @@ function openCustomizeModal(productId) {
     drinkSec.classList.add('hidden');
   }
 
+  // Renderizar Cremas (Hamburguesas y Salchipapas)
   const cremasSec = document.getElementById('customize-cremas-section');
   if (product.allowsCremas) {
     cremasSec.classList.remove('hidden');
@@ -331,6 +427,7 @@ function openCustomizeModal(productId) {
     cremasSec.classList.add('hidden');
   }
 
+  // Renderizar Extras (+S/ 3.00, +S/ 4.00, +S/ 5.00, +S/ 2.00)
   const extraSec = document.getElementById('customize-extras-section');
   if (product.allowsExtras) {
     extraSec.classList.remove('hidden');
@@ -367,11 +464,16 @@ function renderWingSauceOptions() {
     }`;
     btn.innerHTML = `
       <span class="text-xs">${sauce}</span>
-      <div class="w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-yellow-400 bg-yellow-400 text-stone-950' : 'border-stone-600'}">
+      <div class="w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+        isSelected ? 'border-yellow-400 bg-yellow-400 text-stone-950' : 'border-stone-600'
+      }">
         ${isSelected ? '<i class="fa-solid fa-check text-[9px] font-black"></i>' : ''}
       </div>
     `;
-    btn.onclick = () => { customizeState.wingSauce = sauce; renderWingSauceOptions(); };
+    btn.onclick = () => {
+      customizeState.wingSauce = sauce;
+      renderWingSauceOptions();
+    };
     container.appendChild(btn);
   });
 }
@@ -388,11 +490,16 @@ function renderDrinkOptions() {
     }`;
     btn.innerHTML = `
       <span class="text-xs sm:text-sm">${drink}</span>
-      <div class="w-4 h-4 rounded-full border flex items-center justify-center ${isSelected ? 'border-yellow-400 bg-yellow-400 text-stone-950' : 'border-stone-600'}">
+      <div class="w-4 h-4 rounded-full border flex items-center justify-center ${
+        isSelected ? 'border-yellow-400 bg-yellow-400 text-stone-950' : 'border-stone-600'
+      }">
         ${isSelected ? '<i class="fa-solid fa-check text-[9px] font-black"></i>' : ''}
       </div>
     `;
-    btn.onclick = () => { customizeState.drink = drink; renderDrinkOptions(); };
+    btn.onclick = () => {
+      customizeState.drink = drink;
+      renderDrinkOptions();
+    };
     container.appendChild(btn);
   });
 }
@@ -408,14 +515,19 @@ function renderCremasOptions() {
       isChecked ? 'bg-stone-800 border-yellow-500/70 text-white font-medium' : 'bg-stone-950/60 border-stone-800 text-stone-400'
     }`;
     btn.innerHTML = `
-      <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${isChecked ? 'bg-yellow-400 border-yellow-400 text-stone-950' : 'border-stone-600'}">
+      <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
+        isChecked ? 'bg-yellow-400 border-yellow-400 text-stone-950' : 'border-stone-600'
+      }">
         ${isChecked ? '<i class="fa-solid fa-check text-[9px] font-bold"></i>' : ''}
       </div>
       <span class="text-xs">${crema}</span>
     `;
     btn.onclick = () => {
-      if (isChecked) customizeState.cremas = customizeState.cremas.filter(c => c !== crema);
-      else customizeState.cremas.push(crema);
+      if (isChecked) {
+        customizeState.cremas = customizeState.cremas.filter(c => c !== crema);
+      } else {
+        customizeState.cremas.push(crema);
+      }
       renderCremasOptions();
     };
     container.appendChild(btn);
@@ -434,7 +546,9 @@ function renderExtrasOptions() {
     }`;
     btn.innerHTML = `
       <div class="flex items-center gap-2.5">
-        <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${isChecked ? 'bg-yellow-400 border-yellow-400 text-stone-950' : 'border-stone-600'}">
+        <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
+          isChecked ? 'bg-yellow-400 border-yellow-400 text-stone-950' : 'border-stone-600'
+        }">
           ${isChecked ? '<i class="fa-solid fa-check text-[9px] font-bold"></i>' : ''}
         </div>
         <span class="text-xs sm:text-sm">${extra.name}</span>
@@ -442,8 +556,11 @@ function renderExtrasOptions() {
       <span class="text-xs font-bold text-yellow-400 tabular-nums">+${formatPrice(extra.price)}</span>
     `;
     btn.onclick = () => {
-      if (isChecked) customizeState.extras = customizeState.extras.filter(e => e.id !== extra.id);
-      else customizeState.extras.push(extra);
+      if (isChecked) {
+        customizeState.extras = customizeState.extras.filter(e => e.id !== extra.id);
+      } else {
+        customizeState.extras.push(extra);
+      }
       renderExtrasOptions();
       updateCustomizeTotal();
     };
@@ -508,6 +625,7 @@ function setupCustomizeHandlers() {
   };
 }
 
+// 9. Carrito Flotante y Drawer
 function updateCartUI() {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
@@ -515,6 +633,7 @@ function updateCartUI() {
   const deliveryFee = isDelivery ? RESTAURANT_CONFIG.deliveryCost : 0;
   const total = subtotal + deliveryFee;
 
+  // Floating sticky bottom bar
   const floatingBar = document.getElementById('floating-cart-bar');
   if (totalItems > 0) {
     floatingBar.classList.remove('hidden');
@@ -524,6 +643,7 @@ function updateCartUI() {
     floatingBar.classList.add('hidden');
   }
 
+  // Drawer items render
   renderCartDrawerItems(subtotal, deliveryFee, total);
 }
 
@@ -561,7 +681,12 @@ function renderCartDrawerItems(subtotal, deliveryFee, total) {
     itemCard.innerHTML = `
       <div class="flex items-start justify-between gap-3">
         <div class="flex gap-2.5">
-          <img src="${resolveImageUrl(item.image)}" alt="${item.title}" class="w-12 h-12 rounded-lg object-cover border border-stone-800 shrink-0" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=700&q=80';" />
+          <img 
+            src="${resolveImageUrl(item.image)}" 
+            alt="${item.title}" 
+            class="w-12 h-12 rounded-lg object-cover border border-stone-800 shrink-0" 
+            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=700&q=80';"
+          />
           <div>
             <h4 class="font-bold text-sm text-white font-brand">${item.title}</h4>
             <span class="text-xs text-yellow-400 font-bold">${formatPrice(item.unitPrice)} c/u</span>
@@ -588,6 +713,7 @@ function renderCartDrawerItems(subtotal, deliveryFee, total) {
     container.appendChild(itemCard);
   });
 
+  // Totales
   document.getElementById('summary-subtotal').innerText = formatPrice(subtotal);
   document.getElementById('summary-delivery').innerText = deliveryFee > 0 ? formatPrice(deliveryFee) : 'Gratis / Recojo';
   document.getElementById('summary-total').innerText = formatPrice(total);
@@ -597,7 +723,9 @@ window.changeQuantity = function(cartItemId, delta) {
   const item = cart.find(i => i.cartItemId === cartItemId);
   if (!item) return;
   item.quantity += delta;
-  if (item.quantity <= 0) cart = cart.filter(i => i.cartItemId !== cartItemId);
+  if (item.quantity <= 0) {
+    cart = cart.filter(i => i.cartItemId !== cartItemId);
+  }
   saveCart();
 };
 
@@ -633,6 +761,7 @@ function submitOrderViaWhatsApp() {
   const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
   const generalNotes = document.getElementById('customer-notes').value.trim();
 
+  // Validación
   if (!nameInput.value.trim()) {
     alert('Por favor ingresa tu nombre completo.');
     nameInput.focus();
@@ -648,59 +777,103 @@ function submitOrderViaWhatsApp() {
   const deliveryFee = isDelivery ? RESTAURANT_CONFIG.deliveryCost : 0;
   const total = subtotal + deliveryFee;
 
-  let msg = `🔥 *NUEVO PEDIDO - ${RESTAURANT_CONFIG.name.toUpperCase()}* 🔥\n`;
-  msg += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
-  msg += `👤 *Cliente:* ${nameInput.value.trim()}\n`;
-  if (phoneInput.value.trim()) msg += `📱 *Teléfono:* ${phoneInput.value.trim()}\n`;
-  msg += `🛵 *Tipo de entrega:* ${isDelivery ? 'Delivery' : 'Recojo en local'}\n`;
+  const fire = '\u{1F525}';
+  const user = '\u{1F464}';
+  const phone = '\u{1F4F1}';
+  const moto = '\u{1F6F5}';
+  const pin = '\u{1F4CD}';
+  const search = '\u{1F50D}';
+  const store = '\u{1F3EA}';
+  const cardIcon = '\u{1F4B3}';
+  const clip = '\u{1F4CB}';
+  const link = '\u{1F517}';
+  const wing = '\u{1F357}';
+  const cup = '\u{1F964}';
+  const sauce = '\u{1F96B}';
+  const bacon = '\u{1F953}';
+  const note = '\u{1F4DD}';
+  const arrow = '\u{1F449}';
+  const money = '\u{1F4B0}';
+  const chat = '\u{1F4AC}';
+  const cam = '\u{1F4F8}';
+  const rocket = '\u{1F680}';
+  const globe = '\u{1F310}';
+
+  const sep = '----------------------------------------';
+
+  let lines = [
+    `${fire} *NUEVO PEDIDO - ${RESTAURANT_CONFIG.name.toUpperCase()}* ${fire}`,
+    sep,
+    `${globe} *Menú Web:* https://labestiasmash.github.io/la-bestia-fastfood/`,
+    sep,
+    `${user} *Cliente:* ${nameInput.value.trim()}`
+  ];
+
+  if (phoneInput.value.trim()) {
+    lines.push(`${phone} *Teléfono:* ${phoneInput.value.trim()}`);
+  }
+
+  lines.push(`${moto} *Tipo de entrega:* ${isDelivery ? 'Delivery a Domicilio' : 'Recojo en Local'}`);
+
   if (isDelivery) {
-    msg += `📍 *Dirección:* ${addressInput.value.trim()}\n`;
-    if (referenceInput.value.trim()) msg += `🔍 *Referencia:* ${referenceInput.value.trim()}\n`;
+    lines.push(`${pin} *Dirección:* ${addressInput.value.trim()}`);
+    if (referenceInput.value.trim()) {
+      lines.push(`${search} *Referencia:* ${referenceInput.value.trim()}`);
+    }
   } else {
-    msg += `🏬 *Lugar de recojo:* ${RESTAURANT_CONFIG.pickupAddress}\n`;
+    lines.push(`${store} *Lugar de recojo:* ${RESTAURANT_CONFIG.pickupAddress}`);
   }
 
   const paymentLabels = { yape: 'Yape', plin: 'Plin', bcp: 'Transferencia BCP' };
-  msg += `💳 *Método de pago:* ${paymentLabels[paymentMethod] || paymentMethod}\n`;
-
-  msg += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `📋 *DESGLOSE DEL PEDIDO:*\n\n`;
+  lines.push(`${cardIcon} *Método de pago:* ${paymentLabels[paymentMethod] || paymentMethod}`);
+  lines.push(sep);
+  lines.push(`${clip} *DESGLOSE DEL PEDIDO:*`);
+  lines.push('');
 
   cart.forEach((item, idx) => {
-    msg += `${idx + 1}. *${item.quantity}x ${item.title}* (${formatPrice(item.unitPrice)} c/u)\n`;
-    if (item.options.wingSauce) msg += `   🍗 *Sabor Alitas:* ${item.options.wingSauce}\n`;
-    if (item.options.drink) msg += `   🥤 *Bebida:* ${item.options.drink}\n`;
-    if (item.options.cremas?.length) msg += `   🥫 *Cremas:* ${item.options.cremas.join(', ')}\n`;
-    if (item.options.extras?.length) {
-      msg += `   🥓 *Agregados:* ${item.options.extras.map(e => `${e.name} (+${formatPrice(e.price)})`).join(', ')}\n`;
+    lines.push(`${idx + 1}. *${item.quantity}x ${item.title}* (${formatPrice(item.unitPrice)} c/u)`);
+    if (item.image && typeof item.image === 'string' && item.image.startsWith('http')) {
+      lines.push(`   ${link} *Foto:* ${item.image}`);
     }
-    if (item.options.notes) msg += `   📝 *Nota:* ${item.options.notes}\n`;
-    msg += `   👉 *Subtotal:* ${formatPrice(item.unitPrice * item.quantity)}\n\n`;
+    if (item.options.wingSauce) lines.push(`   ${wing} *Sabor Alitas:* ${item.options.wingSauce}`);
+    if (item.options.drink) lines.push(`   ${cup} *Bebida:* ${item.options.drink}`);
+    if (item.options.cremas?.length) lines.push(`   ${sauce} *Cremas:* ${item.options.cremas.join(', ')}`);
+    if (item.options.extras?.length) {
+      lines.push(`   ${bacon} *Agregados:* ${item.options.extras.map(e => `${e.name} (+${formatPrice(e.price)})`).join(', ')}`);
+    }
+    if (item.options.notes) lines.push(`   ${note} *Nota:* ${item.options.notes}`);
+    lines.push(`   ${arrow} *Subtotal:* ${formatPrice(item.unitPrice * item.quantity)}`);
+    lines.push('');
   });
 
-  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `Subtotal productos: ${formatPrice(subtotal)}\n`;
-  if (isDelivery) msg += `Costo de envío: ${formatPrice(deliveryFee)}\n`;
-  msg += `💰 *TOTAL A PAGAR: ${formatPrice(total)}*\n`;
-  msg += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  lines.push(sep);
+  lines.push(`Subtotal productos: ${formatPrice(subtotal)}`);
+  if (isDelivery) lines.push(`Costo de envío: ${formatPrice(deliveryFee)}`);
+  lines.push(`${money} *TOTAL A PAGAR: ${formatPrice(total)}*`);
+  lines.push(sep);
 
-  if (generalNotes) msg += `💬 *Observaciones:*\n${generalNotes}\n\n`;
-
-  if (paymentMethod === 'yape' || paymentMethod === 'plin') {
-    msg += `📸 _*IMPORTANTE:* Adjunto la captura del comprobante de ${paymentMethod.toUpperCase()} a continuación antes de preparar mi pedido._ 🚀\n`;
-  } else if (paymentMethod === 'bcp') {
-    msg += `📸 _*IMPORTANTE:* Adjunto la constancia de transferencia BCP a continuación antes de preparar mi pedido._ 🚀\n`;
+  if (generalNotes) {
+    lines.push('');
+    lines.push(`${chat} *Observaciones:*`);
+    lines.push(generalNotes);
   }
 
-  // ⚠️ LIMPIEZA TOTAL: Solo dígitos, sin espacios ni caracteres especiales
+  lines.push('');
+  if (paymentMethod === 'yape' || paymentMethod === 'plin') {
+    lines.push(`${cam} _*IMPORTANTE:* Adjunto la captura del comprobante de ${paymentMethod.toUpperCase()} a continuación antes de preparar mi pedido._ ${rocket}`);
+  } else if (paymentMethod === 'bcp') {
+    lines.push(`${cam} _*IMPORTANTE:* Adjunto la constancia de transferencia BCP a continuación antes de preparar mi pedido._ ${rocket}`);
+  } else {
+    lines.push(`¡Muchas gracias! Quedo a la espera de la confirmación de mi orden.`);
+  }
+
+  const msg = lines.join('\n');
   const cleanPhone = String(RESTAURANT_CONFIG.phone).replace(/\D/g, '');
-  
-  // URL universal que abre la app en móviles o WhatsApp Web en PC
   const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
   window.open(waUrl, '_blank');
 }
 
-// 11. Modal de Sincronización con Google Sheets en Vivo
+// 11. Modal para Administrar Enlace de Google Sheets en Vivo
 function setupGoogleSheetsManager() {
   const syncBtn = document.getElementById('open-sheets-config-btn');
   if (!syncBtn) return;
@@ -708,7 +881,7 @@ function setupGoogleSheetsManager() {
   syncBtn.addEventListener('click', () => {
     const currentUrl = RESTAURANT_CONFIG.sheetCsvUrl || '';
     const newUrl = prompt(
-      '📊 CONEXIÓN CON GOOGLE SHEETS:\n\nPega aquí el enlace de tu Google Sheet publicado como CSV:\n(En tu Sheet: Archivo > Compartir > Publicar en la web > Formato CSV)',
+      '📊 Conexión con Google Sheets:\n\nPega aquí el enlace de tu Google Sheet publicado como CSV:\n(Archivo > Compartir > Publicar en la web > Formato CSV)',
       currentUrl
     );
 
@@ -718,16 +891,17 @@ function setupGoogleSheetsManager() {
       localStorage.setItem('la_bestia_sheet_csv', cleanUrl);
 
       if (cleanUrl) {
-        alert('🔄 Conectando con tu Google Sheet...');
+        alert('🔄 Sincronizando productos desde tu Google Sheet...');
         loadProductsFromGoogleSheets();
       } else {
-        alert('Se restableció el catálogo por defecto.');
+        alert('Se restableció el menú por defecto.');
         location.reload();
       }
     }
   });
 }
 
+// 12. Inicialización general
 document.addEventListener('DOMContentLoaded', () => {
   setupCategories();
   renderProducts();
@@ -735,10 +909,12 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCartUI();
   setupGoogleSheetsManager();
 
+  // Cargar Google Sheets si hay URL configurada
   if (RESTAURANT_CONFIG.sheetCsvUrl) {
     loadProductsFromGoogleSheets();
   }
 
+  // Event Listeners
   document.getElementById('floating-cart-bar')?.addEventListener('click', openCartDrawer);
   document.getElementById('close-drawer-btn')?.addEventListener('click', closeCartDrawer);
   document.getElementById('close-modal-btn')?.addEventListener('click', closeCustomizeModal);
@@ -746,16 +922,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('modal-backdrop')?.addEventListener('click', closeCustomizeModal);
   document.getElementById('submit-order-whatsapp-btn')?.addEventListener('click', submitOrderViaWhatsApp);
 
+  // Delivery toggle
   const deliveryRadios = document.querySelectorAll('input[name="delivery-type"]');
   deliveryRadios.forEach(radio => {
     radio.addEventListener('change', () => {
       const addressBox = document.getElementById('delivery-address-box');
-      if (radio.value === 'delivery') addressBox?.classList.remove('hidden');
-      else addressBox?.classList.add('hidden');
+      if (radio.value === 'delivery') {
+        addressBox?.classList.remove('hidden');
+      } else {
+        addressBox?.classList.add('hidden');
+      }
       updateCartUI();
     });
   });
 
+  // Copiar números de pago
   document.getElementById('copy-yape-btn')?.addEventListener('click', () => {
     navigator.clipboard.writeText(RESTAURANT_CONFIG.yapeNumber);
     alert(`¡Número ${RESTAURANT_CONFIG.yapeNumber} copiado para Yape / Plin!`);
