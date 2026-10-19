@@ -1,7 +1,8 @@
 /**
  * ==========================================================================
- * LA BESTIA SMASH - Fast Food (app.js Corregido y Sincronizado)
- * Sincronizado con tus fotos de Google Drive y texto exacto del Sheet
+ * LA BESTIA SMASH - Fast Food (app.js)
+ * Sincronización en Tiempo Real con tu Google Sheet:
+ * ID: 1ZhV1kz3V6S4SE2hYh37c1HEW6e9I_W9O6d-aY8CNIXk
  * ==========================================================================
  */
 
@@ -14,10 +15,10 @@ const RESTAURANT_CONFIG = {
   schedule: 'Lun - Dom: 6:00 PM - 11:30 PM',
   deliveryCost: 5.00,
   pickupAddress: 'Av. Las Palmeras 830, Los Olivos - Lima',
-  sheetCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStAjBLrvpS8y2I8QAgzOOl1slg75KEpx23h2hxtb1tkmqZwHKQ9dkR4nfF5gryLeVjxgaiA0rCFBhU/pub?gid=0&single=true&output=csv'
+  sheetCsvUrl: 'https://docs.google.com/spreadsheets/d/1ZhV1kz3V6S4SE2hYh37c1HEW6e9I_W9O6d-aY8CNIXk/gviz/tq?tqx=out:csv&gid=0'
 };
 
-// Convierte enlaces de Google Drive a URLs web directas
+// Convierte enlaces de Google Drive a fotos directas
 function resolveImageUrl(url, category = 'hamburguesas') {
   if (!url || typeof url !== 'string' || url.trim() === '' || url.includes('...')) {
     if (category === 'bebidas') return 'https://lh3.googleusercontent.com/d/1L5w5H8YAk0zFQ4fxWZ-e9P3EQx9H3fSV=w1000';
@@ -48,7 +49,7 @@ function normalizeSheetCsvUrl(url) {
   const match = clean.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
   if (match && match[1]) {
     const gidMatch = clean.match(/[#&?]gid=([0-9]+)/);
-    const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
+    const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '&gid=0';
     return `https://docs.google.com/spreadsheets/d/${match[1]}/gviz/tq?tqx=out:csv${gidParam}&_nocache=${Date.now()}`;
   }
   if (clean.includes('/pub') && clean.includes('output=csv')) {
@@ -65,7 +66,7 @@ function cleanPrice(val) {
   return isNaN(num) ? 0 : num;
 }
 
-// CATÁLOGO BASE 100% ACTUALIZADO CON TUS FOTOS DE GOOGLE DRIVE Y TU SHEET
+// Catálogo base de respaldo
 let MENU_DATA = [
   {
     id: '1',
@@ -184,7 +185,7 @@ function parseCsvLine(line) {
   return result;
 }
 
-// Carga en vivo desde Google Sheet
+// Carga en vivo desde tu Google Sheet (Sin retraso de caché)
 async function loadProductsFromGoogleSheets() {
   const sheetUrl = normalizeSheetCsvUrl(RESTAURANT_CONFIG.sheetCsvUrl);
   if (!sheetUrl) return;
@@ -195,7 +196,7 @@ async function loadProductsFromGoogleSheets() {
     const text = await response.text();
 
     if (text.includes('<!DOCTYPE') || text.includes('Sorry, the file you have requested')) {
-      throw new Error('Google Sheets: archivo no publicado o privado');
+      throw new Error('Google Sheets: archivo privado');
     }
 
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
@@ -230,21 +231,25 @@ async function loadProductsFromGoogleSheets() {
       if (!title) continue;
       const c = rawCategory.toLowerCase();
 
+      // Extras
       if (c === 'extra' || c === 'extras' || c === 'agregado' || c === 'agregados' || c.startsWith('extra ')) {
         if (isDisponible) parsedExtras.push({ id: 'extra_' + id, name: title, price });
         continue;
       }
 
+      // Salsas alitas
       if (c === 'salsa' || c === 'salsas' || (c.includes('alita') && c.includes('salsa'))) {
         if (isDisponible && !parsedWingSauces.includes(title)) parsedWingSauces.push(title);
         continue;
       }
 
+      // Cremas
       if (c === 'crema' || c === 'cremas') {
         if (isDisponible && !parsedCremas.includes(title)) parsedCremas.push(title);
         continue;
       }
 
+      // Bebidas combo
       if (c === 'bebida combo' || c === 'bebidas combo' || c === 'opcion bebida') {
         if (isDisponible && !parsedComboDrinks.includes(title)) parsedComboDrinks.push(title);
         continue;
@@ -594,7 +599,7 @@ window.copyPlinNumber = function() {
   }
 };
 
-// Envío a WhatsApp con PLIN y Foto directa de Drive
+// Envío a WhatsApp con PLIN y Foto de Google Drive
 window.submitOrderViaWhatsApp = function() {
   if (cart.length === 0) return;
 
