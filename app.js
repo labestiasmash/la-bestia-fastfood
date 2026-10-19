@@ -1,7 +1,7 @@
 /**
  * ==========================================================================
- * LA BESTIA SMASH - Fast Food (app.js Móvil Optimizado)
- * Pago Exclusivo con PLIN: 968 495 402
+ * LA BESTIA SMASH - Fast Food (app.js Corregido y Sincronizado)
+ * Sincronizado con tus fotos de Google Drive y texto exacto del Sheet
  * ==========================================================================
  */
 
@@ -14,15 +14,17 @@ const RESTAURANT_CONFIG = {
   schedule: 'Lun - Dom: 6:00 PM - 11:30 PM',
   deliveryCost: 5.00,
   pickupAddress: 'Av. Las Palmeras 830, Los Olivos - Lima',
-  sheetCsvUrl: localStorage.getItem('la_bestia_sheet_csv') || 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStAjBLrvpS8y2l8QAgzO0I1slg75KEpx23h2hxtb1tkmqZwHKQ9dkR4nfF5gryLeVjxgaiA0rCFBhU/pub?gid=0&single=true&output=csv'
+  sheetCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStAjBLrvpS8y2I8QAgzOOl1slg75KEpx23h2hxtb1tkmqZwHKQ9dkR4nfF5gryLeVjxgaiA0rCFBhU/pub?gid=0&single=true&output=csv'
 };
 
+// Convierte enlaces de Google Drive a URLs web directas
 function resolveImageUrl(url, category = 'hamburguesas') {
   if (!url || typeof url !== 'string' || url.trim() === '' || url.includes('...')) {
-    if (category === 'bebidas') return 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80';
+    if (category === 'bebidas') return 'https://lh3.googleusercontent.com/d/1L5w5H8YAk0zFQ4fxWZ-e9P3EQx9H3fSV=w1000';
     if (category === 'alitas') return 'https://lh3.googleusercontent.com/d/12JmafB9K4mLf-90s-ZOdaMnopDEhLazB=w1000';
-    if (category === 'salchipapas') return 'https://lh3.googleusercontent.com/d/1Tw0yyO9cYRLntnVYnsXh7Ajg_BKwOry3=w1000';
-    return 'https://lh3.googleusercontent.com/d/1N7SnkQyEr0WgRr7s12Nte_qiMjMVHFaC=w1000';
+    if (category === 'salchipapas') return 'https://lh3.googleusercontent.com/d/1N7SnkQyEr0WgRr7s12Nte_qiMjMVHFaC=w1000';
+    if (category === 'combos') return 'https://lh3.googleusercontent.com/d/1HzNyOZ2o_WNHAZoVoE3rx7c2rRXMDjTT=w1000';
+    return 'https://lh3.googleusercontent.com/d/1Tw0yyO9cYRLntnVYnsXh7Ajg_BKwOry3=w1000';
   }
 
   const clean = url.trim();
@@ -63,15 +65,16 @@ function cleanPrice(val) {
   return isNaN(num) ? 0 : num;
 }
 
+// CATÁLOGO BASE 100% ACTUALIZADO CON TUS FOTOS DE GOOGLE DRIVE Y TU SHEET
 let MENU_DATA = [
   {
     id: '1',
     category: 'combos',
     itemType: 'combo',
     title: 'Combo Dúo Bestia',
-    description: '2 Hamburguesas Clásicas + 1 Salchipapa Personal + 2 Bebidas',
+    description: '2 Hamburguesas Clásicas + 2 Bebidas',
     price: 20.00,
-    image: 'https://lh3.googleusercontent.com/d/1N7SnkQyEr0WgRr7s12Nte_qiMjMVHFaC=w1000',
+    image: 'https://lh3.googleusercontent.com/d/1HzNyOZ2o_WNHAZoVoE3rx7c2rRXMDjTT=w1000',
     badge: 'PROMO',
     disponible: true,
     allowsDrink: true,
@@ -85,7 +88,7 @@ let MENU_DATA = [
     title: 'La Bestia Royal',
     description: 'Carne artesanal 150g, huevo, queso, tocino, lechuga, tomate y papas',
     price: 22.00,
-    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80',
+    image: 'https://lh3.googleusercontent.com/d/1Tw0yyO9cYRLntnVYnsXh7Ajg_BKwOry3=w1000',
     badge: 'MÁS VENDIDO',
     disponible: true,
     allowsCremas: true,
@@ -112,7 +115,7 @@ let MENU_DATA = [
     title: 'Salchipapa Bestial',
     description: 'Papas amarillas, salchicha frankfurter, chorizo, queso derretido y tocino',
     price: 24.00,
-    image: 'https://lh3.googleusercontent.com/d/1Tw0yyO9cYRLntnVYnsXh7Ajg_BKwOry3=w1000',
+    image: 'https://lh3.googleusercontent.com/d/1N7SnkQyEr0WgRr7s12Nte_qiMjMVHFaC=w1000',
     badge: 'NUEVO',
     disponible: true,
     allowsCremas: true,
@@ -125,7 +128,7 @@ let MENU_DATA = [
     title: 'Chicha Morada 1L',
     description: 'Chicha natural de la casa helada',
     price: 12.00,
-    image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80',
+    image: 'https://lh3.googleusercontent.com/d/1L5w5H8YAk0zFQ4fxWZ-e9P3EQx9H3fSV=w1000',
     badge: '',
     disponible: true,
     allowsDrink: false,
@@ -181,6 +184,7 @@ function parseCsvLine(line) {
   return result;
 }
 
+// Carga en vivo desde Google Sheet
 async function loadProductsFromGoogleSheets() {
   const sheetUrl = normalizeSheetCsvUrl(RESTAURANT_CONFIG.sheetCsvUrl);
   if (!sheetUrl) return;
@@ -191,7 +195,7 @@ async function loadProductsFromGoogleSheets() {
     const text = await response.text();
 
     if (text.includes('<!DOCTYPE') || text.includes('Sorry, the file you have requested')) {
-      throw new Error('Configura tu Google Sheet en "Cualquier persona con el enlace: Lector"');
+      throw new Error('Google Sheets: archivo no publicado o privado');
     }
 
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
@@ -277,7 +281,7 @@ async function loadProductsFromGoogleSheets() {
 
     renderProducts();
   } catch (err) {
-    console.warn('Aviso: usando catálogo base:', err);
+    console.warn('Aviso: usando catálogo sincronizado:', err);
     renderProducts();
   }
 }
@@ -292,7 +296,7 @@ function renderProducts() {
 
   if (filtered.length === 0) {
     container.innerHTML = `
-      <div class="col-span-full py-16 text-center text-stone-400">
+      <div class="col-span-full py-16 text-center text-zinc-400">
         <p class="text-sm">No hay productos disponibles en esta categoría.</p>
       </div>
     `;
@@ -307,7 +311,7 @@ function renderProducts() {
           alt="${item.title}" 
           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
           loading="lazy"
-          onerror="this.src='https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80'"
+          onerror="this.src='https://lh3.googleusercontent.com/d/1Tw0yyO9cYRLntnVYnsXh7Ajg_BKwOry3=w1000'"
         />
         <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none"></div>
         ${item.badge ? `
@@ -343,7 +347,6 @@ function renderProducts() {
   `).join('');
 }
 
-// Modal de Personalización
 window.openCustomizeModal = function(productId) {
   const product = MENU_DATA.find(p => p.id === productId);
   if (!product) return;
@@ -366,7 +369,6 @@ window.openCustomizeModal = function(productId) {
   document.getElementById('modal-product-price').innerText = formatPrice(product.price);
   document.getElementById('modal-product-img').src = product.image;
 
-  // Bebidas
   const drinkSection = document.getElementById('modal-drink-section');
   if (product.allowsDrink && COMBO_DRINKS_LIST.length > 0) {
     drinkSection.classList.remove('hidden');
@@ -380,7 +382,6 @@ window.openCustomizeModal = function(productId) {
     drinkSection.classList.add('hidden');
   }
 
-  // Salsas alitas
   const wingSection = document.getElementById('modal-wing-section');
   if (product.allowsWingSauce && WING_SAUCES_LIST.length > 0) {
     wingSection.classList.remove('hidden');
@@ -394,7 +395,6 @@ window.openCustomizeModal = function(productId) {
     wingSection.classList.add('hidden');
   }
 
-  // Cremas (Solo las de tu hoja)
   const cremasSection = document.getElementById('modal-cremas-section');
   if (product.allowsCremas && CREMAS_OPTIONS.length > 0) {
     cremasSection.classList.remove('hidden');
@@ -408,7 +408,6 @@ window.openCustomizeModal = function(productId) {
     cremasSection.classList.add('hidden');
   }
 
-  // Extras
   const extrasSection = document.getElementById('modal-extras-section');
   if (product.allowsExtras && EXTRAS_OPTIONS.length > 0) {
     extrasSection.classList.remove('hidden');
@@ -501,7 +500,6 @@ window.closeCustomizeModal = function() {
   if (modal) modal.classList.add('hidden');
 };
 
-// UI del Carrito en Móviles con Letras Grandes
 function updateCartUI() {
   const countBadge = document.getElementById('header-cart-count');
   const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -596,7 +594,7 @@ window.copyPlinNumber = function() {
   }
 };
 
-// Envío a WhatsApp con PLIN y Foto de Drive
+// Envío a WhatsApp con PLIN y Foto directa de Drive
 window.submitOrderViaWhatsApp = function() {
   if (cart.length === 0) return;
 
