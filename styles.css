@@ -1,17 +1,13 @@
 /* ==========================================================================
-   LA BESTIA FAST FOOD - ESTILOS PERSONALIZADOS Y ANIMACIONES
+   LA BESTIA SMASH - Fast Food (styles.css)
    ========================================================================== */
 
-/* Variables */
 :root {
-  --color-primary: #eab308; /* Yellow 500 */
-  --color-primary-hover: #ca8a04; /* Yellow 600 */
-  --color-accent-red: #ef4444; /* Red 500 */
-  --color-dark-bg: #0c0a09; /* Stone 950 */
-  --color-dark-surface: #1c1917; /* Stone 900 */
+  --color-primary: #f59e0b;
+  --color-dark-bg: #0c0a09;
+  --color-beast-red: #8A1C14;
 }
 
-/* Tipografía base */
 body {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   background-color: var(--color-dark-bg);
@@ -23,7 +19,7 @@ body {
   font-family: 'Outfit', sans-serif;
 }
 
-/* Scrollbar personalizado */
+/* Scrollbar Personalizado */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -47,15 +43,14 @@ body {
   scrollbar-width: none;
 }
 
-/* Animaciones y Transiciones de Modales / Drawers */
+/* Transiciones de Modales y Drawer */
 .modal-backdrop {
-  background-color: rgba(0, 0, 0, 0.75);
+  background-color: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   transition: opacity 0.25s ease-out;
 }
 
-/* Drawer lateral derecho para Carrito */
 .drawer-content {
   transform: translateX(100%);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -64,7 +59,6 @@ body {
   transform: translateX(0);
 }
 
-/* Bottom Sheet / Modal para Personalización */
 .sheet-content {
   transform: translateY(100%);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -85,7 +79,6 @@ body {
   }
 }
 
-/* Efecto de pulsación táctil */
 .tap-active:active {
   transform: scale(0.97);
 }
