@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>La Bestia Fast Food - Menú Digital Interactivo</title>
-  <meta name="description" content="Menú digital interactivo para La Bestia Fast Food. Pide hamburguesas, alitas acevichadas y salchipapas salvajes directo por WhatsApp." />
+  <title>LA BESTIA SMASH - Fast Food | Menú Digital</title>
+  <meta name="description" content="Menú digital oficial de LA BESTIA SMASH Fast Food. Pide hamburguesas, alitas acevichadas y salchipapas salvajes directo por WhatsApp." />
 
-  <!-- Favicon con Logo Oficial -->
+  <!-- Favicon con tu Logo Oficial -->
   <link rel="icon" type="image/png" href="logo.png" />
   <link rel="apple-touch-icon" href="logo.png" />
 
   <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -23,11 +23,8 @@
       theme: {
         extend: {
           colors: {
-            primary: '#eab308',
-            stone: {
-              850: '#201d1b',
-              950: '#0c0a09'
-            }
+            primary: '#f59e0b',
+            beastRed: '#8A1C14'
           }
         }
       }
@@ -41,102 +38,143 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 
-<body class="bg-stone-950 text-stone-100 antialiased min-h-screen pb-24">
+<body class="bg-stone-950 text-stone-100 antialiased min-h-screen pb-28 selection:bg-amber-500 selection:text-stone-950">
 
-  <!-- ================= HEADER & MARCA ================= -->
-  <header class="w-full bg-stone-950 border-b border-stone-800">
-    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-      <!-- Logo & Nombre -->
+  <!-- ================= HEADER CON TU LOGO OFICIAL ================= -->
+  <header class="sticky top-0 z-40 w-full bg-stone-950/95 backdrop-blur-md border-b border-stone-850 shadow-xl">
+    <div class="max-w-5xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between">
+      <!-- Logo y Marca -->
       <div class="flex items-center gap-3">
-        <img src="logo.png" alt="Logo La Bestia Fast Food" class="w-11 h-11 rounded-xl object-contain shadow-lg shadow-amber-500/20 border border-stone-800 bg-stone-900/60 p-0.5 shrink-0" onerror="this.style.display='none'" />
+        <img 
+          src="logo.png" 
+          alt="Logo La Bestia Smash" 
+          class="w-11 h-11 sm:w-13 sm:h-13 object-contain drop-shadow-[0_2px_12px_rgba(251,191,36,0.35)] shrink-0 transition-transform hover:scale-105" 
+        />
         <div>
-          <div class="flex items-center gap-1.5">
-            <span class="text-xl font-black tracking-tight text-white font-brand">
-              LA <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500">BESTIA</span>
+          <div class="flex items-center gap-2">
+            <span class="text-xl sm:text-2xl font-black tracking-tight text-white font-brand">
+              LA BESTIA <span class="text-amber-400">SMASH</span>
             </span>
-            <span class="text-[9px] font-black uppercase tracking-wider text-red-400 bg-red-950/70 px-1 py-0.5 rounded border border-red-800/60">
-              FAST FOOD
+            <span class="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-red-950/80 border border-red-700/60 px-2 py-0.5 rounded-full">
+              Fast Food
             </span>
           </div>
           <span class="block text-[11px] text-stone-400 font-medium">Hamburguesas · Alitas · Salchipapas</span>
         </div>
       </div>
 
-      <!-- Acciones y Badge -->
-      <div class="flex items-center gap-2">
-        <button id="open-sheets-config-btn" type="button" class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-stone-900 hover:bg-stone-850 text-emerald-400 border border-emerald-800/60 transition-colors cursor-pointer" title="Conectar hoja de Google Sheets">
-          <i class="fa-solid fa-table"></i>
-          <span class="hidden sm:inline">Google Sheets</span>
-        </button>
-
-        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 text-xs font-semibold">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Abierto</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Banner / Portada Atractivo con Variedad Fast Food -->
-    <div class="relative w-full h-52 sm:h-64 bg-stone-900 overflow-hidden">
-      <img
-        src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80"
-        alt="La Bestia Fast Food"
-        class="w-full h-full object-cover brightness-75 contrast-110"
-      />
-      <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/65 to-transparent"></div>
-      <div class="absolute inset-0 max-w-5xl mx-auto px-4 flex flex-col justify-end pb-5">
-        <span class="text-xs uppercase tracking-wider font-extrabold text-yellow-400 flex items-center gap-1.5">
-          <i class="fa-regular fa-clock"></i> Lun - Dom: 6:00 PM - 11:30 PM
-        </span>
-        <h1 class="text-2xl sm:text-3xl md:text-4xl font-black text-white font-brand mt-1">
-          Sabor Callejero <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500">Bestial</span>
-        </h1>
-        <p class="text-xs sm:text-sm text-stone-300 max-w-lg mt-1 line-clamp-2">
-          Carne 100% Angus, alitas extra crocantes acevichadas y salchipapas gigantescas. Pide directo al WhatsApp.
-        </p>
-      </div>
+      <!-- Carrito Cliente -->
+      <button id="open-cart-btn" type="button" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-stone-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition-all">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span class="hidden sm:inline uppercase tracking-wider font-brand">Mi Pedido</span>
+        <span id="header-cart-count" class="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-black">0</span>
+      </button>
     </div>
   </header>
 
-  <!-- ================= FILTRO DE CATEGORÍAS (HORIZONTAL SCROLLABLE) ================= -->
-  <nav class="sticky top-0 z-30 w-full bg-stone-950/95 backdrop-blur-md border-b border-stone-800 shadow-md">
+  <!-- ================= HERO LLAMATIVO FAST FOOD ================= -->
+  <section class="relative w-full bg-gradient-to-b from-stone-900/80 via-stone-950 to-stone-950 overflow-hidden border-b border-stone-800">
+    <div class="max-w-5xl mx-auto px-4 py-8 sm:py-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+      <div class="md:col-span-7 space-y-4 text-left">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/70 border border-red-700/60 text-[11px] font-bold text-amber-300">
+          <i class="fa-solid fa-fire text-amber-400"></i>
+          <span>¡AUTÉNTICAS SMASH BURGERS!</span>
+          <span class="text-red-400/60">·</span>
+          <span class="text-stone-300">Lun - Dom: 6:00 PM - 11:30 PM</span>
+        </div>
+
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-white font-brand leading-[1.1]">
+          Sabor Callejero <br />
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-300 to-red-500">
+            100% Bestial
+          </span>
+        </h1>
+
+        <p class="text-sm text-stone-300 max-w-lg leading-relaxed">
+          Carne 100% Angus aplastada en plancha hirviendo con costra ultra crujiente, alitas bañadas en salsa acevichada artesanal y salchipapas monumentales.
+        </p>
+
+        <!-- Franja Fast Food con Iconos -->
+        <div className="grid grid-cols-2 gap-2 pt-2 max-w-md text-xs">
+          <div class="p-2.5 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center gap-2">
+            <span>🥩</span>
+            <span class="text-stone-200 font-semibold text-[11px]">Carne Angus con costra</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center gap-2">
+            <span>🧀</span>
+            <span class="text-stone-200 font-semibold text-[11px]">Doble Cheddar fundido</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center gap-2">
+            <span>🍗</span>
+            <span class="text-stone-200 font-semibold text-[11px]">Alitas acevichadas</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center gap-2">
+            <span>🛵</span>
+            <span class="text-amber-300 font-semibold text-[11px]">Delivery WhatsApp</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Imagen Destacada del Hero -->
+      <div class="md:col-span-5 relative">
+        <div class="relative rounded-3xl overflow-hidden border border-amber-500/20 shadow-2xl bg-stone-900 aspect-[4/3] group">
+          <img
+            src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80"
+            alt="La Bestia Smash"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-stone-950/85 via-transparent to-transparent pointer-events-none"></div>
+          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between bg-stone-900/90 backdrop-blur-md p-3 rounded-2xl border border-stone-800">
+            <div class="flex items-center gap-2">
+              <img src="logo.png" alt="Logo" class="w-8 h-8 object-contain" />
+              <div>
+                <span class="text-[10px] uppercase font-bold text-amber-400 block tracking-wider">Favorito Bestial</span>
+                <span class="text-xs font-bold text-white font-brand">Doble Smash con Cheddar</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FILTRO DE CATEGORÍAS ================= -->
+  <nav class="sticky top-16 sm:top-20 z-30 w-full bg-stone-950/95 backdrop-blur-md border-b border-stone-800 shadow-md">
     <div class="max-w-5xl mx-auto px-4 flex items-center gap-2 overflow-x-auto py-3 no-scrollbar">
-      <button data-category="combos" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap shrink-0 transition-all bg-gradient-to-r from-yellow-400 to-amber-500 text-stone-950 shadow-lg shadow-amber-500/20">
+      <button data-category="combos" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap shrink-0 transition-all bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 shadow-lg shadow-amber-500/20">
         <i class="fa-solid fa-fire"></i>
         <span>🔥 Combos Bestiales</span>
       </button>
       <button data-category="hamburguesas" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap shrink-0 transition-all bg-stone-900 text-stone-300 hover:text-white border border-stone-800">
-        <i class="fa-solid fa-burger text-yellow-400"></i>
-        <span>🍔 Hamburguesas</span>
+        <i class="fa-solid fa-burger text-amber-400"></i>
+        <span>🍔 Smash Burgers</span>
       </button>
       <button data-category="alitas" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap shrink-0 transition-all bg-stone-900 text-stone-300 hover:text-white border border-stone-800">
-        <i class="fa-solid fa-drumstick-bite text-yellow-400"></i>
+        <i class="fa-solid fa-drumstick-bite text-amber-400"></i>
         <span>🍗 Alitas & Antojos</span>
       </button>
       <button data-category="salchipapas" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap shrink-0 transition-all bg-stone-900 text-stone-300 hover:text-white border border-stone-800">
-        <i class="fa-solid fa-utensils text-yellow-400"></i>
+        <i class="fa-solid fa-utensils text-amber-400"></i>
         <span>🍟 Salchipapas</span>
       </button>
       <button data-category="bebidas" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap shrink-0 transition-all bg-stone-900 text-stone-300 hover:text-white border border-stone-800">
-        <i class="fa-solid fa-wine-glass text-yellow-400"></i>
-        <span>🥤 Bebidas & Salsas</span>
+        <i class="fa-solid fa-wine-glass text-amber-400"></i>
+        <span>🥤 Bebidas</span>
       </button>
     </div>
   </nav>
 
-  <!-- ================= CATÁLOGO DE PRODUCTOS (CARDS) ================= -->
-  <main class="max-w-5xl mx-auto px-4 py-6">
-    <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <!-- Inyectado dinámicamente con JavaScript -->
-    </div>
+  <!-- ================= CATÁLOGO DE PRODUCTOS ================= -->
+  <main class="max-w-5xl mx-auto px-4 py-8">
+    <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
   </main>
 
-  <!-- ================= BARRA INFERIOR FIJA (STICKY BOTTOM CART) ================= -->
+  <!-- ================= BARRA INFERIOR FIJA ================= -->
   <div id="floating-cart-bar" class="fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-stone-950 via-stone-950/95 to-transparent hidden">
     <div class="max-w-md mx-auto">
-      <button type="button" class="w-full h-14 rounded-2xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-stone-950 font-black text-sm sm:text-base flex items-center justify-between px-5 shadow-2xl shadow-yellow-500/25 active:scale-[0.98] transition-all">
+      <button type="button" class="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-400 to-amber-500 text-stone-950 font-black text-sm sm:text-base flex items-center justify-between px-5 shadow-2xl shadow-amber-500/25 active:scale-[0.98] transition-all">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-xl bg-stone-950 text-yellow-400 flex items-center justify-center font-bold">
+          <div class="w-8 h-8 rounded-xl bg-stone-950 text-amber-400 flex items-center justify-center font-bold">
             <i class="fa-solid fa-cart-shopping"></i>
           </div>
           <div class="text-left leading-tight">
@@ -157,17 +195,16 @@
     <div id="modal-backdrop" class="fixed inset-0 modal-backdrop"></div>
     <div class="sheet-content relative w-full max-w-lg bg-stone-900 border border-stone-800 rounded-t-3xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl z-10">
       
-      <!-- Grab Bar Mobile -->
       <div class="w-12 h-1.5 bg-stone-700 rounded-full mx-auto my-2.5 sm:hidden"></div>
 
       <!-- Header del Producto -->
-      <div class="p-4 border-b border-stone-800 flex items-start justify-between gap-3 bg-stone-950/70">
+      <div class="p-4 border-b border-stone-800 flex items-start justify-between gap-3 bg-stone-950">
         <div class="flex gap-3">
-          <img id="modal-product-img" src="" alt="Producto" class="w-16 h-16 rounded-xl object-cover border border-stone-700 shrink-0" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=700&q=80';" />
+          <img id="modal-product-img" src="" alt="Producto" class="w-16 h-16 rounded-xl object-cover border border-stone-700 shrink-0" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80';" />
           <div>
-            <span class="text-[11px] font-black text-yellow-400 uppercase tracking-wider">Personalizar Platillo</span>
-            <h2 id="modal-product-title" class="text-lg font-bold text-white font-brand leading-snug"></h2>
-            <span id="modal-product-baseprice" class="text-yellow-400 font-extrabold text-sm tabular-nums"></span>
+            <span class="text-[10px] font-black text-amber-400 uppercase tracking-wider block">LA BESTIA SMASH · PERSONALIZAR</span>
+            <h2 id="modal-product-title" class="text-base sm:text-lg font-bold text-white font-brand leading-snug"></h2>
+            <span id="modal-product-baseprice" class="text-amber-400 font-extrabold text-sm tabular-nums"></span>
           </div>
         </div>
         <button id="close-modal-btn" type="button" class="w-8 h-8 rounded-full bg-stone-800 text-stone-400 hover:text-white flex items-center justify-center">
@@ -177,59 +214,58 @@
 
       <!-- Opciones Scrollable -->
       <div class="overflow-y-auto p-4 space-y-5 text-sm text-stone-300">
-        
-        <!-- 1. Para Alitas: Selector de Sabor -->
+        <!-- Sabor Alitas -->
         <div id="customize-wings-section" class="space-y-2 hidden">
           <div class="flex items-center justify-between">
-            <label class="font-bold text-white flex items-center gap-1.5 text-xs sm:text-sm">
-              <i class="fa-solid fa-drumstick-bite text-yellow-400"></i> Salsa de Alitas (1 a elección)
+            <label class="font-bold text-white flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-drumstick-bite text-amber-400"></i> Salsa de Alitas (1 a elección)
             </label>
-            <span class="text-[11px] text-yellow-400">*Requerido</span>
+            <span class="text-[11px] text-amber-400 font-semibold">*Requerido</span>
           </div>
           <div id="wings-options-container" class="grid grid-cols-2 gap-2"></div>
         </div>
 
-        <!-- 2. Selector de Bebida si es Combo -->
+        <!-- Bebida Combo -->
         <div id="customize-drink-section" class="space-y-2 hidden">
           <div class="flex items-center justify-between">
-            <label class="font-bold text-white flex items-center gap-1.5 text-xs sm:text-sm">
-              <i class="fa-solid fa-wine-glass text-yellow-400"></i> Bebida del Combo (Incluida)
+            <label class="font-bold text-white flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-wine-glass text-amber-400"></i> Bebida del Combo (Incluida)
             </label>
             <span class="text-[11px] text-stone-400">1 opción</span>
           </div>
           <div id="drink-options-container" class="space-y-1.5"></div>
         </div>
 
-        <!-- 3. Para Hamburguesas y Salchipapas: Checkbox de Cremas -->
+        <!-- Cremas (Solo las 3 exactas de tu hoja) -->
         <div id="customize-cremas-section" class="space-y-2 hidden">
           <div class="flex items-center justify-between">
-            <label class="font-bold text-white flex items-center gap-1.5 text-xs sm:text-sm">
-              <i class="fa-solid fa-bottle-droplet text-yellow-400"></i> Cremas al Gusto
+            <label class="font-bold text-white flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-bottle-droplet text-amber-400"></i> Cremas al Gusto
             </label>
-            <span class="text-[11px] text-stone-400">Elige todas las que desees</span>
+            <span class="text-[11px] text-stone-400">Elige solo las que desees</span>
           </div>
-          <div id="cremas-options-container" class="grid grid-cols-2 gap-2"></div>
+          <div id="cremas-options-container" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
         </div>
 
-        <!-- 4. Checkbox de Agregados Extra con Precio -->
+        <!-- Extras de tu hoja con precio -->
         <div id="customize-extras-section" class="space-y-2 hidden">
           <div class="flex items-center justify-between">
-            <label class="font-bold text-white flex items-center gap-1.5 text-xs sm:text-sm">
-              <i class="fa-solid fa-plus-circle text-yellow-400"></i> Agregados Extras
+            <label class="font-bold text-white flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-plus-circle text-amber-400"></i> Agregados Extras
             </label>
-            <span class="text-[11px] text-stone-400">Opcional</span>
+            <span class="text-[11px] text-amber-400 font-semibold">Opcional</span>
           </div>
           <div id="extras-options-container" class="space-y-1.5"></div>
         </div>
 
-        <!-- Instrucciones especiales -->
+        <!-- Notas de cocina -->
         <div class="space-y-1.5">
-          <label class="font-semibold text-white text-xs">Instrucciones especiales para cocina:</label>
+          <label class="font-semibold text-white text-xs block">Instrucciones especiales para cocina:</label>
           <input
             id="customize-notes"
             type="text"
-            placeholder="Ej: Sin cebolla, cremas bien servidas aparte..."
-            class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-yellow-400"
+            placeholder="Ej: Sin cebolla, cremas bien servidas..."
+            class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-400"
           />
         </div>
       </div>
@@ -246,7 +282,7 @@
           </button>
         </div>
 
-        <button id="add-to-cart-submit-btn" type="button" class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 active:scale-[0.98] text-stone-950 font-black text-sm flex items-center justify-between shadow-lg shadow-yellow-500/20">
+        <button id="add-to-cart-submit-btn" type="button" class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-[0.98] text-stone-950 font-black text-sm flex items-center justify-between shadow-lg shadow-amber-500/20">
           <span>Agregar al Pedido</span>
           <span id="modal-total-btn" class="tabular-nums bg-stone-950/20 px-2 py-0.5 rounded-md font-black">S/ 0.00</span>
         </button>
@@ -254,15 +290,14 @@
     </div>
   </div>
 
-  <!-- ================= DRAWER LATERAL / MODAL CARRITO & CHECKOUT ================= -->
+  <!-- ================= DRAWER DEL CARRITO & CHECKOUT ================= -->
   <div id="cart-drawer" class="fixed inset-0 z-50 flex justify-end hidden">
     <div id="drawer-backdrop" class="fixed inset-0 modal-backdrop"></div>
     <div class="drawer-content relative w-full max-w-lg bg-stone-900 border-l border-stone-800 flex flex-col h-full shadow-2xl z-10">
       
-      <!-- Drawer Header -->
       <div class="p-4 border-b border-stone-800 flex items-center justify-between bg-stone-950">
-        <div class="flex items-center gap-2">
-          <img src="logo.png" alt="Logo" class="w-6 h-6 rounded-lg object-contain bg-stone-900 border border-stone-800 p-0.5" onerror="this.style.display='none'" />
+        <div class="flex items-center gap-2.5">
+          <img src="logo.png" alt="Logo" class="w-8 h-8 object-contain" />
           <h2 class="text-base font-bold text-white font-brand">Tu Pedido Bestial</h2>
         </div>
         <button id="close-drawer-btn" type="button" class="w-8 h-8 rounded-full bg-stone-800 text-stone-400 hover:text-white flex items-center justify-center">
@@ -270,31 +305,26 @@
         </button>
       </div>
 
-      <!-- Drawer Body -->
       <div class="flex-1 overflow-y-auto p-4 space-y-5">
-        <!-- Estado Vacío -->
         <div id="drawer-empty-state" class="py-16 text-center text-stone-400 hidden">
           <i class="fa-solid fa-cart-shopping text-4xl text-stone-700 mb-3"></i>
           <p class="font-bold text-white">Tu carrito está vacío</p>
-          <p class="text-xs text-stone-500 mt-1">Selecciona una de nuestras hamburguesas, alitas o salchipapas para armar tu orden.</p>
+          <p class="text-xs text-stone-500 mt-1">Selecciona una de nuestras smash burgers, alitas o salchipapas.</p>
         </div>
 
-        <!-- Lista de Items -->
         <div id="drawer-items-list" class="space-y-3"></div>
 
-        <!-- Formulario de Checkout -->
         <div id="drawer-checkout-section" class="space-y-4 pt-3 border-t border-stone-800">
-          
           <!-- Tipo de Entrega -->
           <div class="space-y-2">
             <label class="text-xs font-bold text-stone-400 uppercase tracking-wider block">Tipo de Entrega</label>
             <div class="grid grid-cols-2 gap-2 p-1 bg-stone-950 rounded-xl border border-stone-800">
-              <label class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold cursor-pointer has-[:checked]:bg-gradient-to-r has-[:checked]:from-yellow-400 has-[:checked]:to-amber-500 has-[:checked]:text-stone-950 text-stone-300">
+              <label class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold cursor-pointer has-[:checked]:bg-gradient-to-r has-[:checked]:from-amber-400 has-[:checked]:to-amber-500 has-[:checked]:text-stone-950 text-stone-300">
                 <input type="radio" name="delivery-type" value="delivery" checked class="hidden" />
                 <i class="fa-solid fa-motorcycle"></i>
                 <span>Delivery (+S/ 5.00)</span>
               </label>
-              <label class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold cursor-pointer has-[:checked]:bg-gradient-to-r has-[:checked]:from-yellow-400 has-[:checked]:to-amber-500 has-[:checked]:text-stone-950 text-stone-300">
+              <label class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold cursor-pointer has-[:checked]:bg-gradient-to-r has-[:checked]:from-amber-400 has-[:checked]:to-amber-500 has-[:checked]:text-stone-950 text-stone-300">
                 <input type="radio" name="delivery-type" value="pickup" class="hidden" />
                 <i class="fa-solid fa-store"></i>
                 <span>Recojo en Local</span>
@@ -306,28 +336,27 @@
           <div class="space-y-2.5">
             <div>
               <label class="text-xs font-semibold text-stone-300">Nombre completo *</label>
-              <input id="customer-name" type="text" placeholder="Ej: Juan Pérez" class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-yellow-400" />
+              <input id="customer-name" type="text" placeholder="Ej: Juan Pérez" class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400" />
             </div>
 
             <div>
               <label class="text-xs font-semibold text-stone-300">Teléfono / WhatsApp</label>
-              <input id="customer-phone" type="tel" placeholder="Ej: 987 123 456" class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-yellow-400" />
+              <input id="customer-phone" type="tel" placeholder="Ej: 987 123 456" class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400" />
             </div>
 
-            <!-- Caja Dirección para Delivery -->
             <div id="delivery-address-box" class="space-y-2">
               <div>
                 <label class="text-xs font-semibold text-stone-300">Dirección exacta *</label>
-                <input id="customer-address" type="text" placeholder="Calle / Av, número, piso o depto" class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-yellow-400" />
+                <input id="customer-address" type="text" placeholder="Calle / Av, número, piso o depto" class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400" />
               </div>
               <div>
                 <label class="text-xs font-semibold text-stone-300">Referencia</label>
-                <input id="customer-reference" type="text" placeholder="Ej: Frente al parque, reja negra" class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-yellow-400" />
+                <input id="customer-reference" type="text" placeholder="Ej: Frente al parque, reja negra" class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400" />
               </div>
             </div>
           </div>
 
-          <!-- Método de Pago -->
+          <!-- Métodos de Pago -->
           <div class="space-y-2">
             <label class="text-xs font-bold text-stone-400 uppercase tracking-wider block">Método de Pago</label>
             <div class="grid grid-cols-3 gap-2">
@@ -350,27 +379,24 @@
               </label>
             </div>
 
-            <!-- Caja info Yape/Plin -->
             <div class="p-2.5 rounded-xl bg-stone-950 border border-stone-800 flex items-center justify-between text-xs">
               <div>
                 <span class="text-stone-400">Yape / Plin:</span>
-                <span class="font-bold text-white ml-1 font-mono">987 654 321</span>
+                <span class="font-bold text-white ml-1 font-mono">968 495 402</span>
               </div>
-              <button id="copy-yape-btn" type="button" class="text-yellow-400 hover:text-yellow-300 text-[11px] font-bold">
+              <button id="copy-yape-btn" type="button" class="text-amber-400 hover:text-amber-300 text-[11px] font-bold">
                 <i class="fa-regular fa-copy mr-1"></i>Copiar
               </button>
             </div>
           </div>
 
-          <!-- Observaciones generales -->
           <div>
             <label class="text-xs font-semibold text-stone-300">Observaciones del pedido</label>
-            <input id="customer-notes" type="text" placeholder="Ej: Sin tártara, ají extra en pote..." class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-yellow-400" />
+            <input id="customer-notes" type="text" placeholder="Ej: Sin tártara, ají extra en pote..." class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400" />
           </div>
         </div>
       </div>
 
-      <!-- Drawer Footer Totals & WhatsApp Final Button -->
       <div class="p-4 bg-stone-950 border-t border-stone-800 space-y-3">
         <div class="space-y-1 text-xs text-stone-400">
           <div class="flex justify-between">
@@ -383,7 +409,7 @@
           </div>
           <div class="flex justify-between text-base font-black text-white pt-1.5 border-t border-stone-800 font-brand">
             <span>Total a Pagar:</span>
-            <span id="summary-total" class="text-yellow-400 tabular-nums text-lg">S/ 0.00</span>
+            <span id="summary-total" class="text-amber-400 tabular-nums text-lg">S/ 0.00</span>
           </div>
         </div>
 
@@ -395,7 +421,19 @@
     </div>
   </div>
 
-  <!-- Script con la lógica JS vanilla -->
+  <!-- Pie de página discreto con sincronizador para el dueño -->
+  <footer class="mt-16 py-6 border-t border-stone-850/60 text-center text-xs text-stone-500 max-w-5xl mx-auto px-4">
+    <p class="font-brand font-bold text-stone-400">
+      LA BESTIA SMASH <span class="font-normal text-stone-500 font-sans">· Fast Food</span>
+    </p>
+    <p class="text-[11px] text-stone-600 mt-1">Av. Las Palmeras 830, Los Olivos - Lima · WhatsApp: 968 495 402</p>
+    <div class="mt-4 pt-3 border-t border-stone-900 flex justify-center text-[10px] text-stone-700">
+      <button id="open-sheets-config-btn" type="button" class="hover:text-stone-400">
+        Configurar Google Sheets
+      </button>
+    </div>
+  </footer>
+
   <script src="app.js" charset="UTF-8"></script>
 </body>
 </html>
