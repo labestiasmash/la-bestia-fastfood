@@ -1,15 +1,9 @@
 /**
  * ==========================================================================
- * LA BESTIA SMASH - Fast Food (app.js Corregido y Optimizado)
+ * LA BESTIA SMASH - Fast Food (app.js Corregido y Completo)
  * ==========================================================================
- * - Sincronización en vivo con Google Sheets (GVIZ instantáneo sin retraso)
- * - Corrección de decimales y precios en soles (interpreta 2,5 a 2.50 y S/ 20)
- * - Enlace directo de fotos de Google Drive
- * - Adjunta la foto en el pedido de WhatsApp para evitar confusiones
- * - Solo las 3 cremas exactas de tu hoja (sin salsas inventadas)
  */
 
-// 1. Configuración del Local
 const RESTAURANT_CONFIG = {
   name: 'LA BESTIA SMASH',
   complement: 'Fast Food',
@@ -24,7 +18,7 @@ const RESTAURANT_CONFIG = {
   sheetCsvUrl: localStorage.getItem('la_bestia_sheet_csv') || 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStAjBLrvpS8y2I8QAgzOOl1slg75KEpx23h2hxtb1tkmqZwHKQ9dkR4nfF5gryLeVjxgaiA0rCFBhU/pub?gid=0&single=true&output=csv'
 };
 
-// 2. Conversor inteligente de fotos de Google Drive
+// Convierte enlaces de Google Drive a URLs directas de imagen
 function resolveImageUrl(url, category = 'hamburguesas') {
   if (!url || typeof url !== 'string' || url.trim() === '' || url.includes('...')) {
     if (category === 'bebidas') return 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80';
@@ -48,7 +42,7 @@ function resolveImageUrl(url, category = 'hamburguesas') {
   return clean;
 }
 
-// 3. Normalizador de Google Sheets con anti-caché en vivo
+// Burlar la caché de 15 min de Google Sheets usando gviz y timestamp
 function normalizeSheetCsvUrl(url) {
   if (!url || typeof url !== 'string') return '';
   const clean = url.trim();
@@ -65,7 +59,7 @@ function normalizeSheetCsvUrl(url) {
   return clean;
 }
 
-// 4. Limpiador de precios robusto (acepta 2.50, 2,50, S/ 20)
+// Limpia decimales peruanos con comas y signos de soles (S/ 20, 2,50)
 function cleanPrice(val) {
   if (!val) return 0;
   const str = String(val).replace(/[sS]\/?\.?/g, '').replace(/\$/g, '').replace(/\s+/g, '').replace(',', '.');
@@ -73,7 +67,7 @@ function cleanPrice(val) {
   return isNaN(num) ? 0 : num;
 }
 
-// 5. Catálogo Base con los precios reales de tu Google Sheet
+// Catálogo base de respaldo
 let MENU_DATA = [
   {
     id: '1',
@@ -145,7 +139,6 @@ let MENU_DATA = [
   }
 ];
 
-// Opciones estrictas de tu Sheet (Row 14-22)
 let WING_SAUCES_LIST = ['Acevichada Especial', 'BBQ Ahumada', 'Pasion Maracuya'];
 let CREMAS_OPTIONS = ['Mayonesa de la casa', 'Ají Pollero Bestial', 'Tartara criolla'];
 let EXTRAS_OPTIONS = [
@@ -156,14 +149,13 @@ let EXTRAS_OPTIONS = [
 ];
 let COMBO_DRINKS_LIST = ['Inka Cola 500ml', 'Coca Cola 500ml', 'Chicha Morada 500ml'];
 
-// 6. Estado Global
-let currentCategory = 'combos';
+let currentCategory = 'all'; // Ver Todo por defecto
 let cart = JSON.parse(localStorage.getItem('la_bestia_cart') || '[]');
 let activeCustomizingProduct = null;
 let customizeState = {
-  drink: COMBO_DRINKS_LIST[0],
-  wingSauce: WING_SAUCES_LIST[0],
-  cremas: [], // Inicia vacío: solo se agregan las cremas que el cliente marque
+  drink: '',
+  wingSauce: '',
+  cremas: [],
   extras: [],
   quantity: 1,
   notes: ''
@@ -178,7 +170,23 @@ function saveCart() {
   updateCartUI();
 }
 
-// 7. Carga Dinámica desde Google Sheets
+function parseCsvLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') inQuotes = !inQuotes;
+    else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else current += char;
+  }
+  result.push(current.trim());
+  return result;
+}
+
+// Carga en vivo desde Google Sheets
 async function loadProductsFromGoogleSheets() {
   const sheetUrl = normalizeSheetCsvUrl(RESTAURANT_CONFIG.sheetCsvUrl);
   if (!sheetUrl) return;
@@ -189,7 +197,7 @@ async function loadProductsFromGoogleSheets() {
     const text = await response.text();
 
     if (text.includes('<!DOCTYPE') || text.includes('Sorry, the file you have requested')) {
-      throw new Error('Google Sheets requiere permiso público: Compartir > Cualquier persona con el enlace: Lector');
+      throw new Error('Configura tu Google Sheet en "Cualquier persona con el enlace: Lector"');
     }
 
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
@@ -224,14 +232,14 @@ async function loadProductsFromGoogleSheets() {
       if (!title) continue;
       const c = rawCategory.toLowerCase();
 
-      // Extras / Agregados
-      if (c === 'extra' || c === 'extras' || c === 'agregado' || c === 'agregados' || c === 'adicional' || c.startsWith('extra ')) {
+      // Extras
+      if (c === 'extra' || c === 'extras' || c === 'agregado' || c === 'agregados' || c.startsWith('extra ')) {
         if (isDisponible) parsedExtras.push({ id: 'extra_' + id, name: title, price });
         continue;
       }
 
-      // Salsas de Alitas
-      if (c === 'salsa' || c === 'salsas' || c.includes('alita') && (c.includes('salsa') || c.includes('sabor'))) {
+      // Salsas alitas
+      if (c === 'salsa' || c === 'salsas' || (c.includes('alita') && c.includes('salsa'))) {
         if (isDisponible && !parsedWingSauces.includes(title)) parsedWingSauces.push(title);
         continue;
       }
@@ -242,13 +250,13 @@ async function loadProductsFromGoogleSheets() {
         continue;
       }
 
-      // Bebidas Combo
-      if (c === 'bebida combo' || c === 'bebidas combo' || c === 'opcion bebida' || c === 'gaseosa combo') {
+      // Bebidas combo
+      if (c === 'bebida combo' || c === 'bebidas combo' || c === 'opcion bebida') {
         if (isDisponible && !parsedComboDrinks.includes(title)) parsedComboDrinks.push(title);
         continue;
       }
 
-      // Platillos principales
+      // Platos principales
       let category = 'hamburguesas';
       if (c.includes('combo')) category = 'combos';
       else if (c.includes('alita') || c.includes('antojo')) category = 'alitas';
@@ -258,7 +266,7 @@ async function loadProductsFromGoogleSheets() {
       parsedProducts.push({
         id,
         category,
-        itemType: category === 'alitas' ? 'alitas' : category === 'combos' ? 'combo' : category === 'salchipapas' ? 'salchipapa' : category === 'bebidas' ? 'bebida' : 'hamburguesa',
+        itemType: category,
         title,
         description,
         price,
@@ -279,460 +287,300 @@ async function loadProductsFromGoogleSheets() {
     if (parsedComboDrinks.length > 0) COMBO_DRINKS_LIST = parsedComboDrinks;
 
     renderProducts();
-    console.log('✅ Catálogo sincronizado en tiempo real desde Google Sheets.');
   } catch (err) {
     console.warn('Aviso: usando catálogo base:', err);
+    renderProducts();
   }
 }
 
-function parseCsvLine(line) {
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    if (char === '"') inQuotes = !inQuotes;
-    else if (char === ',' && !inQuotes) {
-      result.push(current.trim());
-      current = '';
-    } else current += char;
-  }
-  result.push(current.trim());
-  return result;
-}
-
-// 8. Renderizado del Menú
+// Renderizado de productos y soporte para "Ver Todo"
 function renderProducts() {
   const container = document.getElementById('products-grid');
   if (!container) return;
 
-  const filtered = MENU_DATA.filter(item => item.category === currentCategory && item.disponible);
-  container.innerHTML = '';
+  const filtered = currentCategory === 'all'
+    ? MENU_DATA.filter(p => p.disponible)
+    : MENU_DATA.filter(p => p.disponible && p.category === currentCategory);
 
   if (filtered.length === 0) {
     container.innerHTML = `
-      <div class="col-span-full py-12 text-center text-stone-400 bg-stone-900/40 rounded-2xl border border-stone-800 p-6">
-        <i class="fa-solid fa-utensils text-3xl text-stone-600 mb-2"></i>
-        <p class="font-bold text-white text-sm">No hay productos en esta categoría</p>
+      <div class="col-span-full py-16 text-center text-stone-400">
+        <p class="text-sm">No hay productos disponibles en esta categoría.</p>
       </div>
     `;
     return;
   }
 
-  filtered.forEach(product => {
-    const card = document.createElement('article');
-    card.className = 'group relative flex flex-col justify-between bg-stone-900/90 rounded-2xl overflow-hidden border border-stone-800 hover:border-amber-400/50 transition-all cursor-pointer shadow-lg hover:shadow-amber-500/10';
-    card.onclick = () => openCustomizeModal(product.id);
-
-    const isTop = product.badge && (product.badge.toLowerCase().includes('top') || product.badge.toLowerCase().includes('más vendido') || product.badge.toLowerCase().includes('promo'));
-    const badgeHtml = product.badge
-      ? `<span class="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-lg ${
-          isTop ? 'bg-amber-400 text-stone-950 shadow-amber-500/30 font-black' : 'bg-red-600 text-white shadow-red-600/30'
-        }"><i class="fa-solid fa-fire text-[10px]"></i> ${product.badge}</span>`
-      : '';
-
-    card.innerHTML = `
+  container.innerHTML = filtered.map(item => `
+    <article class="group relative flex flex-col justify-between bg-stone-900 rounded-2xl overflow-hidden border border-stone-800 hover:border-amber-400/50 transition-all duration-300 cursor-pointer shadow-xl hover:-translate-y-1" onclick="openCustomizeModal('${item.id}')">
       <div class="relative aspect-[4/3] w-full overflow-hidden bg-stone-950">
         <img 
-          src="${resolveImageUrl(product.image)}" 
-          alt="${product.title}" 
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-          loading="lazy" 
-          onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80';"
+          src="${item.image}" 
+          alt="${item.title}" 
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+          loading="lazy"
+          onerror="this.src='https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80'"
         />
-        <div class="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/20 to-transparent pointer-events-none"></div>
-        ${badgeHtml}
+        <div class="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-transparent to-transparent pointer-events-none"></div>
+        ${item.badge ? `
+          <span class="absolute top-2.5 left-2.5 z-10 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-400 text-stone-950 shadow-md">
+            🔥 ${item.badge}
+          </span>
+        ` : ''}
         <div class="absolute bottom-2.5 left-2.5 z-10">
-          <span class="inline-block bg-stone-950/95 text-amber-400 font-black text-sm sm:text-base px-2.5 py-1 rounded-xl border border-amber-400/30 tabular-nums shadow">
-            ${formatPrice(product.price)}
+          <span class="bg-stone-950/90 text-amber-400 font-black text-sm px-3 py-1 rounded-xl border border-amber-400/30">
+            ${formatPrice(item.price)}
           </span>
         </div>
       </div>
       <div class="p-4 flex flex-col flex-1 justify-between gap-3">
         <div>
-          <h3 class="font-bold text-base sm:text-lg text-white group-hover:text-amber-400 transition-colors leading-snug font-brand">
-            ${product.title}
+          <h3 class="font-extrabold text-base text-white group-hover:text-amber-400 transition-colors font-brand">
+            ${item.title}
           </h3>
           <p class="text-xs text-stone-400 mt-1 line-clamp-2 leading-relaxed">
-            ${product.description}
+            ${item.description}
           </p>
         </div>
         <div class="flex items-center justify-between pt-2 border-t border-stone-800/80 mt-auto">
-          <div class="text-[11px] text-stone-500">
-            ${product.allowsWingSauce ? '🍗 Salsa · ' : ''}${product.allowsDrink ? '🥤 Bebida · ' : ''}${product.allowsCremas ? '🥫 Cremas · ' : ''}${product.allowsExtras ? '🥓 Extras' : ''}
-          </div>
-          <button type="button" class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-stone-950 font-black text-xs shadow-md transition-all active:scale-95">
-            <i class="fa-solid fa-plus text-xs"></i>
-            <span>Pedir</span>
+          <span class="text-[10px] text-stone-400 uppercase tracking-wider font-semibold">
+            ${item.category}
+          </span>
+          <button type="button" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-stone-950 font-black text-xs shadow-md transition-all">
+            + Pedir
           </button>
         </div>
       </div>
-    `;
-    container.appendChild(card);
-  });
+    </article>
+  `).join('');
 }
 
-// 9. Categorías
-function setupCategories() {
-  const buttons = document.querySelectorAll('[data-category]');
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentCategory = btn.getAttribute('data-category');
-      buttons.forEach(b => {
-        const isCurrent = b === btn;
-        b.className = isCurrent
-          ? 'flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap shrink-0 transition-all bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 shadow-lg shadow-amber-500/20'
-          : 'flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap shrink-0 transition-all bg-stone-900 text-stone-300 hover:text-white border border-stone-800';
-      });
-      renderProducts();
-    });
-  });
-}
-
-// 10. Modal de Personalización
-function openCustomizeModal(productId) {
+// Modal de personalización
+window.openCustomizeModal = function(productId) {
   const product = MENU_DATA.find(p => p.id === productId);
   if (!product) return;
-  activeCustomizingProduct = product;
 
-  // Inicia sin cremas marcadas (para agregar solo lo que el cliente pida)
+  activeCustomizingProduct = product;
   customizeState = {
-    drink: COMBO_DRINKS_LIST[0],
-    wingSauce: WING_SAUCES_LIST[0],
-    cremas: [],
+    drink: COMBO_DRINKS_LIST[0] || '',
+    wingSauce: WING_SAUCES_LIST[0] || '',
+    cremas: [], // Inicia vacío para que el cliente solo elija las que desea
     extras: [],
     quantity: 1,
     notes: ''
   };
 
-  document.getElementById('modal-product-img').src = resolveImageUrl(product.image);
+  const modal = document.getElementById('customize-modal');
+  if (!modal) return;
+
   document.getElementById('modal-product-title').innerText = product.title;
-  document.getElementById('modal-product-baseprice').innerText = `${formatPrice(product.price)} base`;
+  document.getElementById('modal-product-desc').innerText = product.description;
+  document.getElementById('modal-product-price').innerText = formatPrice(product.price);
+  document.getElementById('modal-product-img').src = product.image;
 
-  const wingSec = document.getElementById('customize-wings-section');
-  if (product.allowsWingSauce && WING_SAUCES_LIST.length > 0) {
-    wingSec.classList.remove('hidden');
-    renderWingSauceOptions();
-  } else {
-    wingSec.classList.add('hidden');
-  }
-
-  const drinkSec = document.getElementById('customize-drink-section');
+  // Bebidas para combos
+  const drinkSection = document.getElementById('modal-drink-section');
   if (product.allowsDrink && COMBO_DRINKS_LIST.length > 0) {
-    drinkSec.classList.remove('hidden');
-    renderDrinkOptions();
+    drinkSection.classList.remove('hidden');
+    document.getElementById('modal-drink-options').innerHTML = COMBO_DRINKS_LIST.map((drink, idx) => `
+      <label class="flex items-center justify-between p-3 rounded-xl bg-stone-900 border border-stone-800 cursor-pointer hover:border-amber-400/40">
+        <span class="text-xs text-white">${drink}</span>
+        <input type="radio" name="modal-drink" value="${drink}" ${idx === 0 ? 'checked' : ''} onchange="customizeState.drink = this.value" class="text-amber-400" />
+      </label>
+    `).join('');
   } else {
-    drinkSec.classList.add('hidden');
+    drinkSection.classList.add('hidden');
   }
 
-  const cremasSec = document.getElementById('customize-cremas-section');
+  // Salsas para alitas
+  const wingSection = document.getElementById('modal-wing-section');
+  if (product.allowsWingSauce && WING_SAUCES_LIST.length > 0) {
+    wingSection.classList.remove('hidden');
+    document.getElementById('modal-wing-options').innerHTML = WING_SAUCES_LIST.map((sauce, idx) => `
+      <label class="flex items-center justify-between p-3 rounded-xl bg-stone-900 border border-stone-800 cursor-pointer hover:border-amber-400/40">
+        <span class="text-xs text-white">${sauce}</span>
+        <input type="radio" name="modal-wing-sauce" value="${sauce}" ${idx === 0 ? 'checked' : ''} onchange="customizeState.wingSauce = this.value" class="text-amber-400" />
+      </label>
+    `).join('');
+  } else {
+    wingSection.classList.add('hidden');
+  }
+
+  // Cremas (Solo las 3 de tu hoja)
+  const cremasSection = document.getElementById('modal-cremas-section');
   if (product.allowsCremas && CREMAS_OPTIONS.length > 0) {
-    cremasSec.classList.remove('hidden');
-    renderCremasOptions();
+    cremasSection.classList.remove('hidden');
+    document.getElementById('modal-cremas-options').innerHTML = CREMAS_OPTIONS.map(crema => `
+      <label class="flex items-center justify-between p-3 rounded-xl bg-stone-900 border border-stone-800 cursor-pointer hover:border-amber-400/40">
+        <span class="text-xs text-white">${crema}</span>
+        <input type="checkbox" value="${crema}" onchange="toggleCremaSelection('${crema}', this.checked)" class="rounded text-amber-400" />
+      </label>
+    `).join('');
   } else {
-    cremasSec.classList.add('hidden');
+    cremasSection.classList.add('hidden');
   }
 
-  const extraSec = document.getElementById('customize-extras-section');
+  // Extras
+  const extrasSection = document.getElementById('modal-extras-section');
   if (product.allowsExtras && EXTRAS_OPTIONS.length > 0) {
-    extraSec.classList.remove('hidden');
-    renderExtrasOptions();
-  } else {
-    extraSec.classList.add('hidden');
-  }
-
-  document.getElementById('customize-notes').value = '';
-  updateCustomizeTotal();
-
-  const modal = document.getElementById('customize-modal');
-  modal.classList.remove('hidden');
-  document.body.classList.add('overflow-hidden');
-  setTimeout(() => modal.classList.add('sheet-open'), 10);
-}
-
-function closeCustomizeModal() {
-  const modal = document.getElementById('customize-modal');
-  modal.classList.remove('sheet-open');
-  document.body.classList.remove('overflow-hidden');
-  setTimeout(() => modal.classList.add('hidden'), 250);
-}
-
-function renderWingSauceOptions() {
-  const container = document.getElementById('wings-options-container');
-  container.innerHTML = '';
-  WING_SAUCES_LIST.forEach(sauce => {
-    const isSelected = customizeState.wingSauce === sauce;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = `flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
-      isSelected ? 'bg-amber-500/15 border-amber-400 text-white font-bold' : 'bg-stone-950/70 border-stone-800 text-stone-300'
-    }`;
-    btn.innerHTML = `
-      <span class="text-xs truncate">${sauce}</span>
-      <div class="w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-        isSelected ? 'border-amber-400 bg-amber-400 text-stone-950' : 'border-stone-600'
-      }">
-        ${isSelected ? '<i class="fa-solid fa-check text-[9px] font-black"></i>' : ''}
-      </div>
-    `;
-    btn.onclick = () => {
-      customizeState.wingSauce = sauce;
-      renderWingSauceOptions();
-    };
-    container.appendChild(btn);
-  });
-}
-
-function renderDrinkOptions() {
-  const container = document.getElementById('drink-options-container');
-  container.innerHTML = '';
-  COMBO_DRINKS_LIST.forEach(drink => {
-    const isSelected = customizeState.drink === drink;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = `w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
-      isSelected ? 'bg-amber-500/15 border-amber-400 text-white font-semibold' : 'bg-stone-950/70 border-stone-800 text-stone-300'
-    }`;
-    btn.innerHTML = `
-      <span class="text-xs sm:text-sm truncate">${drink}</span>
-      <div class="w-4 h-4 rounded-full border flex items-center justify-center ${
-        isSelected ? 'border-amber-400 bg-amber-400 text-stone-950' : 'border-stone-600'
-      }">
-        ${isSelected ? '<i class="fa-solid fa-check text-[9px] font-black"></i>' : ''}
-      </div>
-    `;
-    btn.onclick = () => {
-      customizeState.drink = drink;
-      renderDrinkOptions();
-    };
-    container.appendChild(btn);
-  });
-}
-
-function renderCremasOptions() {
-  const container = document.getElementById('cremas-options-container');
-  container.innerHTML = '';
-  CREMAS_OPTIONS.forEach(crema => {
-    const isChecked = customizeState.cremas.includes(crema);
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = `flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all ${
-      isChecked ? 'bg-stone-800 border-amber-500/70 text-white font-medium' : 'bg-stone-950/60 border-stone-800 text-stone-400'
-    }`;
-    btn.innerHTML = `
-      <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
-        isChecked ? 'bg-amber-400 border-amber-400 text-stone-950' : 'border-stone-600'
-      }">
-        ${isChecked ? '<i class="fa-solid fa-check text-[9px] font-bold"></i>' : ''}
-      </div>
-      <span class="text-xs truncate">${crema}</span>
-    `;
-    btn.onclick = () => {
-      if (isChecked) {
-        customizeState.cremas = customizeState.cremas.filter(c => c !== crema);
-      } else {
-        customizeState.cremas.push(crema);
-      }
-      renderCremasOptions();
-    };
-    container.appendChild(btn);
-  });
-}
-
-function renderExtrasOptions() {
-  const container = document.getElementById('extras-options-container');
-  container.innerHTML = '';
-  EXTRAS_OPTIONS.forEach(extra => {
-    const isChecked = customizeState.extras.some(e => e.id === extra.id);
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = `w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
-      isChecked ? 'bg-amber-500/15 border-amber-400 text-white font-bold' : 'bg-stone-950/60 border-stone-800 text-stone-300'
-    }`;
-    btn.innerHTML = `
-      <div class="flex items-center gap-2.5">
-        <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
-          isChecked ? 'bg-amber-400 border-amber-400 text-stone-950' : 'border-stone-600'
-        }">
-          ${isChecked ? '<i class="fa-solid fa-check text-[9px] font-bold"></i>' : ''}
+    extrasSection.classList.remove('hidden');
+    document.getElementById('modal-extras-options').innerHTML = EXTRAS_OPTIONS.map(extra => `
+      <label class="flex items-center justify-between p-3 rounded-xl bg-stone-900 border border-stone-800 cursor-pointer hover:border-amber-400/40">
+        <span class="text-xs text-white">${extra.name}</span>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-amber-400 font-bold">+${formatPrice(extra.price)}</span>
+          <input type="checkbox" value="${extra.id}" onchange="toggleExtraSelection('${extra.id}', this.checked)" class="rounded text-amber-400" />
         </div>
-        <span class="text-xs sm:text-sm font-medium">${extra.name}</span>
-      </div>
-      <span class="text-xs font-bold text-amber-400 tabular-nums">+${formatPrice(extra.price)}</span>
-    `;
-    btn.onclick = () => {
-      if (isChecked) {
-        customizeState.extras = customizeState.extras.filter(e => e.id !== extra.id);
-      } else {
-        customizeState.extras.push(extra);
-      }
-      renderExtrasOptions();
-      updateCustomizeTotal();
-    };
-    container.appendChild(btn);
-  });
-}
-
-function updateCustomizeTotal() {
-  if (!activeCustomizingProduct) return;
-  const extrasSum = customizeState.extras.reduce((s, e) => s + e.price, 0);
-  const unitPrice = activeCustomizingProduct.price + extrasSum;
-  const total = unitPrice * customizeState.quantity;
-
-  document.getElementById('modal-qty-display').innerText = customizeState.quantity;
-  document.getElementById('modal-total-btn').innerText = formatPrice(total);
-}
-
-function setupCustomizeHandlers() {
-  document.getElementById('modal-qty-minus').onclick = () => {
-    if (customizeState.quantity > 1) {
-      customizeState.quantity--;
-      updateCustomizeTotal();
-    }
-  };
-  document.getElementById('modal-qty-plus').onclick = () => {
-    customizeState.quantity++;
-    updateCustomizeTotal();
-  };
-
-  document.getElementById('add-to-cart-submit-btn').onclick = () => {
-    if (!activeCustomizingProduct) return;
-    const extrasSum = customizeState.extras.reduce((s, e) => s + e.price, 0);
-    const unitPrice = activeCustomizingProduct.price + extrasSum;
-    const notes = document.getElementById('customize-notes').value.trim();
-
-    const cartItemId = `${activeCustomizingProduct.id}-${activeCustomizingProduct.allowsDrink ? customizeState.drink : ''}-${activeCustomizingProduct.allowsWingSauce ? customizeState.wingSauce : ''}-${customizeState.cremas.sort().join('|')}-${customizeState.extras.map(e => e.id).sort().join('|')}-${notes}`;
-
-    const existingIndex = cart.findIndex(item => item.cartItemId === cartItemId);
-    if (existingIndex >= 0) {
-      cart[existingIndex].quantity += customizeState.quantity;
-    } else {
-      cart.push({
-        cartItemId,
-        productId: activeCustomizingProduct.id,
-        title: activeCustomizingProduct.title,
-        basePrice: activeCustomizingProduct.price,
-        unitPrice,
-        quantity: customizeState.quantity,
-        image: activeCustomizingProduct.image,
-        options: {
-          drink: activeCustomizingProduct.allowsDrink ? customizeState.drink : null,
-          wingSauce: activeCustomizingProduct.allowsWingSauce ? customizeState.wingSauce : null,
-          cremas: activeCustomizingProduct.allowsCremas ? [...customizeState.cremas] : [],
-          extras: activeCustomizingProduct.allowsExtras ? [...customizeState.extras] : [],
-          notes
-        }
-      });
-    }
-
-    saveCart();
-    closeCustomizeModal();
-  };
-}
-
-// 11. Carrito Flotante y Drawer
-function updateCartUI() {
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-  const isDelivery = document.querySelector('input[name="delivery-type"]:checked')?.value === 'delivery';
-  const deliveryFee = isDelivery ? RESTAURANT_CONFIG.deliveryCost : 0;
-  const total = subtotal + deliveryFee;
-
-  // Actualiza contador en header
-  const headerCount = document.getElementById('header-cart-count');
-  if (headerCount) headerCount.innerText = totalItems;
-
-  // Barra flotante inferior
-  const floatingBar = document.getElementById('floating-cart-bar');
-  if (totalItems > 0) {
-    floatingBar.classList.remove('hidden');
-    document.getElementById('floating-items-count').innerText = `${totalItems} ${totalItems === 1 ? 'ítem' : 'ítems'}`;
-    document.getElementById('floating-total-price').innerText = formatPrice(total);
+      </label>
+    `).join('');
   } else {
-    floatingBar.classList.add('hidden');
+    extrasSection.classList.add('hidden');
   }
 
-  renderCartDrawerItems(subtotal, deliveryFee, total);
+  document.getElementById('modal-qty').innerText = '1';
+  document.getElementById('modal-notes').value = '';
+  updateModalTotal();
+
+  modal.classList.remove('hidden');
+};
+
+window.toggleCremaSelection = function(crema, isChecked) {
+  if (isChecked) {
+    if (!customizeState.cremas.includes(crema)) customizeState.cremas.push(crema);
+  } else {
+    customizeState.cremas = customizeState.cremas.filter(c => c !== crema);
+  }
+};
+
+window.toggleExtraSelection = function(extraId, isChecked) {
+  const extra = EXTRAS_OPTIONS.find(e => e.id === extraId);
+  if (!extra) return;
+  if (isChecked) {
+    customizeState.extras.push(extra);
+  } else {
+    customizeState.extras = customizeState.extras.filter(e => e.id !== extraId);
+  }
+  updateModalTotal();
+};
+
+window.changeModalQty = function(delta) {
+  customizeState.quantity = Math.max(1, customizeState.quantity + delta);
+  document.getElementById('modal-qty').innerText = customizeState.quantity;
+  updateModalTotal();
+};
+
+function updateModalTotal() {
+  if (!activeCustomizingProduct) return;
+  const extrasTotal = customizeState.extras.reduce((sum, e) => sum + e.price, 0);
+  const unitPrice = activeCustomizingProduct.price + extrasTotal;
+  const total = unitPrice * customizeState.quantity;
+  document.getElementById('modal-total-btn-price').innerText = formatPrice(total);
 }
 
-function renderCartDrawerItems(subtotal, deliveryFee, total) {
-  const container = document.getElementById('drawer-items-list');
-  const emptyState = document.getElementById('drawer-empty-state');
-  const checkoutSection = document.getElementById('drawer-checkout-section');
-  if (!container) return;
+window.addCustomizedItemToCart = function() {
+  if (!activeCustomizingProduct) return;
+
+  const extrasTotal = customizeState.extras.reduce((sum, e) => sum + e.price, 0);
+  const unitPrice = activeCustomizingProduct.price + extrasTotal;
+  customizeState.notes = document.getElementById('modal-notes').value.trim();
+
+  const cartItemId = `${activeCustomizingProduct.id}_${Date.now()}`;
+
+  cart.push({
+    cartItemId,
+    productId: activeCustomizingProduct.id,
+    title: activeCustomizingProduct.title,
+    basePrice: activeCustomizingProduct.price,
+    unitPrice: unitPrice,
+    quantity: customizeState.quantity,
+    image: activeCustomizingProduct.image,
+    options: {
+      drink: activeCustomizingProduct.allowsDrink ? customizeState.drink : null,
+      wingSauce: activeCustomizingProduct.allowsWingSauce ? customizeState.wingSauce : null,
+      cremas: [...customizeState.cremas],
+      extras: [...customizeState.extras],
+      notes: customizeState.notes
+    }
+  });
+
+  saveCart();
+  closeCustomizeModal();
+  openCartDrawer();
+};
+
+window.closeCustomizeModal = function() {
+  const modal = document.getElementById('customize-modal');
+  if (modal) modal.classList.add('hidden');
+};
+
+// UI del Carrito
+function updateCartUI() {
+  const countBadge = document.getElementById('header-cart-count');
+  const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+
+  if (countBadge) countBadge.innerText = totalCount;
+
+  const itemsContainer = document.getElementById('cart-items-container');
+  if (!itemsContainer) return;
 
   if (cart.length === 0) {
-    emptyState.classList.remove('hidden');
-    container.classList.add('hidden');
-    checkoutSection.classList.add('hidden');
+    itemsContainer.innerHTML = `
+      <div class="py-12 text-center text-stone-400 space-y-2">
+        <i class="fa-solid fa-bag-shopping text-4xl text-stone-600"></i>
+        <p class="text-sm font-semibold">Tu carrito está vacío</p>
+        <p class="text-xs text-stone-500">Agrega tus smash burgers favoritas</p>
+      </div>
+    `;
+    document.getElementById('cart-subtotal').innerText = 'S/ 0.00';
+    document.getElementById('cart-total').innerText = 'S/ 0.00';
     return;
   }
 
-  emptyState.classList.add('hidden');
-  container.classList.remove('hidden');
-  checkoutSection.classList.remove('hidden');
-
-  container.innerHTML = '';
-  cart.forEach(item => {
-    const itemCard = document.createElement('div');
-    itemCard.className = 'p-3 rounded-xl bg-stone-950/80 border border-stone-800 space-y-2';
-
-    let optionsHtml = '';
-    if (item.options.wingSauce) optionsHtml += `<p class="text-amber-300">🍗 Salsa: ${item.options.wingSauce}</p>`;
-    if (item.options.drink) optionsHtml += `<p>🥤 Bebida: ${item.options.drink}</p>`;
-    if (item.options.cremas?.length) optionsHtml += `<p>🥫 Cremas: ${item.options.cremas.join(', ')}</p>`;
-    if (item.options.extras?.length) {
-      optionsHtml += `<p class="text-amber-200">🥓 Extras: ${item.options.extras.map(e => `${e.name} (+${formatPrice(e.price)})`).join(', ')}</p>`;
-    }
-    if (item.options.notes) optionsHtml += `<p class="italic text-stone-500">📝 "${item.options.notes}"</p>`;
-
-    itemCard.innerHTML = `
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex gap-2.5">
-          <img 
-            src="${resolveImageUrl(item.image)}" 
-            alt="${item.title}" 
-            class="w-12 h-12 rounded-lg object-cover border border-stone-800 shrink-0" 
-            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80';"
-          />
-          <div>
-            <h4 class="font-bold text-sm text-white font-brand">${item.title}</h4>
-            <span class="text-xs text-amber-400 font-bold">${formatPrice(item.unitPrice)} c/u</span>
-          </div>
-        </div>
-        <button type="button" class="text-stone-500 hover:text-red-400 p-1 text-xs" onclick="removeCartItem('${item.cartItemId}')">
-          <i class="fa-regular fa-trash-can"></i>
+  itemsContainer.innerHTML = cart.map(item => `
+    <div class="p-3.5 rounded-2xl bg-stone-900 border border-stone-800 space-y-2.5">
+      <div class="flex items-center justify-between">
+        <span class="font-bold text-white text-sm">${item.title}</span>
+        <button onclick="removeCartItem('${item.cartItemId}')" class="text-red-400 hover:text-red-300 text-xs">
+          <i class="fa-solid fa-trash-can"></i>
         </button>
       </div>
-      ${optionsHtml ? `<div class="text-[11px] text-stone-400 bg-stone-900/60 p-2 rounded-lg border border-stone-850 space-y-0.5">${optionsHtml}</div>` : ''}
-      <div class="flex items-center justify-between pt-1">
-        <div class="flex items-center bg-stone-900 border border-stone-800 rounded-lg p-0.5">
-          <button type="button" class="w-7 h-7 rounded flex items-center justify-center text-stone-300 hover:text-white" onclick="changeQuantity('${item.cartItemId}', -1)">
-            <i class="fa-solid fa-minus text-[10px]"></i>
-          </button>
-          <span class="w-7 text-center font-bold text-xs text-white tabular-nums">${item.quantity}</span>
-          <button type="button" class="w-7 h-7 rounded flex items-center justify-center text-stone-300 hover:text-white" onclick="changeQuantity('${item.cartItemId}', 1)">
-            <i class="fa-solid fa-plus text-[10px]"></i>
-          </button>
-        </div>
-        <span class="font-black text-sm text-white tabular-nums">${formatPrice(item.unitPrice * item.quantity)}</span>
+      <div class="text-[11px] text-stone-400 space-y-0.5">
+        ${item.options.wingSauce ? `<div>🍗 Salsa: ${item.options.wingSauce}</div>` : ''}
+        ${item.options.drink ? `<div>🥤 Bebida: ${item.options.drink}</div>` : ''}
+        ${item.options.cremas && item.options.cremas.length > 0 ? `<div>🥫 Cremas: ${item.options.cremas.join(', ')}</div>` : ''}
+        ${item.options.extras && item.options.extras.length > 0 ? `<div>🥓 Extras: ${item.options.extras.map(e => e.name).join(', ')}</div>` : ''}
+        ${item.options.notes ? `<div class="italic text-stone-400">📝 "${item.options.notes}"</div>` : ''}
       </div>
-    `;
-    container.appendChild(itemCard);
-  });
+      <div class="flex items-center justify-between pt-2 border-t border-stone-800">
+        <div class="flex items-center gap-2 bg-stone-950 px-2.5 py-1 rounded-xl border border-stone-800">
+          <button onclick="updateCartItemQty('${item.cartItemId}', -1)" class="text-stone-400 hover:text-white px-1 font-bold">-</button>
+          <span class="text-xs font-bold text-white px-2">${item.quantity}</span>
+          <button onclick="updateCartItemQty('${item.cartItemId}', 1)" class="text-stone-400 hover:text-white px-1 font-bold">+</button>
+        </div>
+        <span class="text-sm font-black text-amber-400">${formatPrice(item.unitPrice * item.quantity)}</span>
+      </div>
+    </div>
+  `).join('');
 
-  document.getElementById('summary-subtotal').innerText = formatPrice(subtotal);
-  document.getElementById('summary-delivery').innerText = deliveryFee > 0 ? formatPrice(deliveryFee) : 'Gratis / Recojo';
-  document.getElementById('summary-total').innerText = formatPrice(total);
+  const deliveryRadios = document.getElementsByName('delivery-type');
+  const isDelivery = Array.from(deliveryRadios).find(r => r.checked)?.value === 'delivery';
+  const deliveryFee = isDelivery ? RESTAURANT_CONFIG.deliveryCost : 0;
+  const total = subtotal + deliveryFee;
+
+  document.getElementById('cart-subtotal').innerText = formatPrice(subtotal);
+  document.getElementById('delivery-cost').innerText = formatPrice(deliveryFee);
+  document.getElementById('cart-total').innerText = formatPrice(total);
 }
 
-window.changeQuantity = function(cartItemId, delta) {
-  const item = cart.find(i => i.cartItemId === cartItemId);
-  if (!item) return;
-  item.quantity += delta;
-  if (item.quantity <= 0) {
-    cart = cart.filter(i => i.cartItemId !== cartItemId);
-  }
+window.updateCartItemQty = function(cartItemId, delta) {
+  cart = cart.map(item => {
+    if (item.cartItemId === cartItemId) {
+      const q = item.quantity + delta;
+      return q > 0 ? { ...item, quantity: q } : null;
+    }
+    return item;
+  }).filter(Boolean);
   saveCart();
 };
 
@@ -741,23 +589,18 @@ window.removeCartItem = function(cartItemId) {
   saveCart();
 };
 
-function openCartDrawer() {
+window.openCartDrawer = function() {
   const drawer = document.getElementById('cart-drawer');
-  drawer.classList.remove('hidden');
-  document.body.classList.add('overflow-hidden');
-  setTimeout(() => drawer.classList.add('drawer-open'), 10);
-  updateCartUI();
-}
+  if (drawer) drawer.classList.remove('hidden');
+};
 
-function closeCartDrawer() {
+window.closeCartDrawer = function() {
   const drawer = document.getElementById('cart-drawer');
-  drawer.classList.remove('drawer-open');
-  document.body.classList.remove('overflow-hidden');
-  setTimeout(() => drawer.classList.add('hidden'), 300);
-}
+  if (drawer) drawer.classList.add('hidden');
+};
 
-// 12. Envío por WhatsApp con Foto de Drive de cada Producto
-function submitOrderViaWhatsApp() {
+// Envío a WhatsApp con FOTO DE DRIVE y datos limpios del Sheet
+window.submitOrderViaWhatsApp = function() {
   if (cart.length === 0) return;
 
   const isDelivery = document.querySelector('input[name="delivery-type"]:checked').value === 'delivery';
@@ -783,38 +626,30 @@ function submitOrderViaWhatsApp() {
   const deliveryFee = isDelivery ? RESTAURANT_CONFIG.deliveryCost : 0;
   const total = subtotal + deliveryFee;
 
-  const sep = '----------------------------------------';
-
   let lines = [
-    `🔥 *NUEVO PEDIDO - ${RESTAURANT_CONFIG.name} (${RESTAURANT_CONFIG.complement})* 🔥`,
-    sep,
+    `🔥 *NUEVO PEDIDO - ${RESTAURANT_CONFIG.name.toUpperCase()} (${RESTAURANT_CONFIG.complement})* 🔥`,
+    '----------------------------------------',
     `👤 *Cliente:* ${nameInput.value.trim()}`
   ];
 
-  if (phoneInput.value.trim()) {
-    lines.push(`📱 *Teléfono:* ${phoneInput.value.trim()}`);
-  }
-
+  if (phoneInput.value.trim()) lines.push(`📱 *Teléfono:* ${phoneInput.value.trim()}`);
   lines.push(`🛵 *Tipo de entrega:* ${isDelivery ? 'Delivery a Domicilio' : 'Recojo en Local'}`);
 
   if (isDelivery) {
     lines.push(`📍 *Dirección:* ${addressInput.value.trim()}`);
-    if (referenceInput.value.trim()) {
-      lines.push(`🔍 *Referencia:* ${referenceInput.value.trim()}`);
-    }
+    if (referenceInput.value.trim()) lines.push(`🔍 *Referencia:* ${referenceInput.value.trim()}`);
   } else {
     lines.push(`🏪 *Lugar de recojo:* ${RESTAURANT_CONFIG.pickupAddress}`);
   }
 
-  const paymentLabels = { yape: 'Yape', plin: 'Plin', bcp: 'Transferencia BCP' };
+  const paymentLabels = { yape: 'Yape', plin: 'Plin', bcp: 'Transferencia BCP', cash: 'Efectivo contraentrega' };
   lines.push(`💳 *Método de pago:* ${paymentLabels[paymentMethod] || paymentMethod}`);
-  lines.push(sep);
-  lines.push(`📋 *DESGLOSE DEL PEDIDO:*`);
-  lines.push('');
+  lines.push('----------------------------------------');
+  lines.push(`📋 *DESGLOSE DEL PEDIDO:*\n`);
 
   cart.forEach((item, idx) => {
     lines.push(`${idx + 1}. *${item.quantity}x ${item.title}* (${formatPrice(item.unitPrice)} c/u)`);
-    // Enlace de foto directo de Drive
+    // Adjunta el enlace directo de la imagen para que la cocina no tenga dudas
     if (item.image && typeof item.image === 'string' && item.image.trim()) {
       lines.push(`   🖼️ *Foto:* ${item.image}`);
     }
@@ -827,90 +662,67 @@ function submitOrderViaWhatsApp() {
       lines.push(`   🥓 *Agregados:* ${item.options.extras.map(e => `${e.name} (+${formatPrice(e.price)})`).join(', ')}`);
     }
     if (item.options.notes) lines.push(`   📝 *Nota:* ${item.options.notes}`);
-    lines.push(`   👉 *Subtotal:* ${formatPrice(item.unitPrice * item.quantity)}`);
-    lines.push('');
+    lines.push(`   👉 *Subtotal:* ${formatPrice(item.unitPrice * item.quantity)}\n`);
   });
 
-  lines.push(sep);
+  lines.push('----------------------------------------');
   lines.push(`Subtotal productos: ${formatPrice(subtotal)}`);
   if (isDelivery) lines.push(`Costo de envío: ${formatPrice(deliveryFee)}`);
   lines.push(`💰 *TOTAL A PAGAR: ${formatPrice(total)}*`);
-  lines.push(sep);
+  lines.push('----------------------------------------');
 
   if (generalNotes) {
-    lines.push('');
-    lines.push(`💬 *Observaciones:* ${generalNotes}`);
+    lines.push(`\n💬 *Observaciones:* ${generalNotes}`);
   }
 
-  lines.push('');
-  lines.push(`📸 _*IMPORTANTE:* Adjunto la captura del comprobante antes de preparar mi pedido._ 🚀`);
+  lines.push(`\n📸 _*IMPORTANTE:* Adjunto la captura del comprobante antes de preparar mi pedido._ 🚀`);
 
   const msg = lines.join('\n');
   const cleanPhone = String(RESTAURANT_CONFIG.phone).replace(/\D/g, '');
   const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
   window.open(waUrl, '_blank');
-}
+};
 
-// 13. Sincronizador de Google Sheets (Acceso oculto para el dueño)
-function setupGoogleSheetsManager() {
-  const syncBtn = document.getElementById('open-sheets-config-btn');
-  if (!syncBtn) return;
-
-  syncBtn.addEventListener('click', () => {
-    const currentUrl = RESTAURANT_CONFIG.sheetCsvUrl || '';
-    const newUrl = prompt(
-      '📊 Conexión con Google Sheets:\n\nPega aquí el enlace de tu Google Sheet:\n(Compartir > Cualquier persona con el enlace: Lector)',
-      currentUrl
-    );
-
-    if (newUrl !== null) {
-      const cleanUrl = newUrl.trim();
-      RESTAURANT_CONFIG.sheetCsvUrl = cleanUrl;
-      localStorage.setItem('la_bestia_sheet_csv', cleanUrl);
-
-      if (cleanUrl) {
-        alert('🔄 Sincronizando productos desde tu Google Sheet...');
-        loadProductsFromGoogleSheets();
-      }
-    }
-  });
-}
-
-// 14. Inicialización
+// Inicialización de eventos al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
-  setupCategories();
-  renderProducts();
-  setupCustomizeHandlers();
-  updateCartUI();
-  setupGoogleSheetsManager();
+  // Pestañas de categorías (con soporte "Ver Todo")
+  const categoryBtns = document.querySelectorAll('[data-category]');
+  categoryBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      categoryBtns.forEach(b => {
+        b.classList.remove('bg-gradient-to-r', 'from-amber-400', 'to-amber-500', 'text-stone-950', 'shadow-lg');
+        b.classList.add('bg-stone-900', 'text-stone-300', 'border', 'border-stone-800');
+      });
+      btn.classList.remove('bg-stone-900', 'text-stone-300', 'border', 'border-stone-800');
+      btn.classList.add('bg-gradient-to-r', 'from-amber-400', 'to-amber-500', 'text-stone-950', 'shadow-lg');
 
-  if (RESTAURANT_CONFIG.sheetCsvUrl) {
-    loadProductsFromGoogleSheets();
-  }
+      currentCategory = btn.getAttribute('data-category');
+      renderProducts();
+    });
+  });
 
-  document.getElementById('floating-cart-bar')?.addEventListener('click', openCartDrawer);
-  document.getElementById('open-cart-btn')?.addEventListener('click', openCartDrawer);
-  document.getElementById('close-drawer-btn')?.addEventListener('click', closeCartDrawer);
-  document.getElementById('close-modal-btn')?.addEventListener('click', closeCustomizeModal);
-  document.getElementById('drawer-backdrop')?.addEventListener('click', closeCartDrawer);
-  document.getElementById('modal-backdrop')?.addEventListener('click', closeCustomizeModal);
-  document.getElementById('submit-order-whatsapp-btn')?.addEventListener('click', submitOrderViaWhatsApp);
+  // Botón abrir carrito
+  const openCartBtn = document.getElementById('open-cart-btn');
+  if (openCartBtn) openCartBtn.addEventListener('click', openCartDrawer);
 
-  const deliveryRadios = document.querySelectorAll('input[name="delivery-type"]');
+  // Botón cerrar carrito
+  const closeCartBtn = document.getElementById('close-cart-btn');
+  if (closeCartBtn) closeCartBtn.addEventListener('click', closeCartDrawer);
+
+  // Delivery toggle fields
+  const deliveryRadios = document.getElementsByName('delivery-type');
   deliveryRadios.forEach(radio => {
     radio.addEventListener('change', () => {
-      const addressBox = document.getElementById('delivery-address-box');
-      if (radio.value === 'delivery') {
-        addressBox?.classList.remove('hidden');
-      } else {
-        addressBox?.classList.add('hidden');
+      const addressBox = document.getElementById('delivery-address-fields');
+      if (addressBox) {
+        if (radio.value === 'delivery') addressBox.classList.remove('hidden');
+        else addressBox.classList.add('hidden');
       }
       updateCartUI();
     });
   });
 
-  document.getElementById('copy-yape-btn')?.addEventListener('click', () => {
-    navigator.clipboard.writeText(RESTAURANT_CONFIG.yapeNumber);
-    alert(`¡Número ${RESTAURANT_CONFIG.yapeNumber} copiado para Yape / Plin!`);
-  });
+  // Cargar productos en vivo desde Google Sheet
+  loadProductsFromGoogleSheets();
+  updateCartUI();
 });
