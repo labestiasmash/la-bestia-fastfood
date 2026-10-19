@@ -14,7 +14,7 @@ const RESTAURANT_CONFIG = {
   schedule: 'Lun - Dom: 6:00 PM - 11:30 PM',
   deliveryCost: 5.00,
   pickupAddress: 'Av. Las Palmeras 830, Los Olivos - Lima',
-  sheetCsvUrl: localStorage.getItem('la_bestia_sheet_csv') || 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStAjBLrvpS8y2I8QAgzOOl1slg75KEpx23h2hxtb1tkmqZwHKQ9dkR4nfF5gryLeVjxgaiA0rCFBhU/pub?gid=0&single=true&output=csv'
+  sheetCsvUrl: localStorage.getItem('la_bestia_sheet_csv') || 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStAjBLrvpS8y2l8QAgzO0I1slg75KEpx23h2hxtb1tkmqZwHKQ9dkR4nfF5gryLeVjxgaiA0rCFBhU/pub?gid=0&single=true&output=csv'
 };
 
 function resolveImageUrl(url, category = 'hamburguesas') {
