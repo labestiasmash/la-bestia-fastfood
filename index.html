@@ -2,7 +2,7 @@
 <html lang="es" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>LA BESTIA SMASH - Fast Food | Menú Digital</title>
   <link rel="icon" type="image/png" href="logo.png" />
   <link rel="apple-touch-icon" href="logo.png" />
@@ -20,39 +20,38 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 
-<body class="bg-black text-stone-100 antialiased min-h-screen pb-28 selection:bg-amber-500 selection:text-black">
+<body class="bg-black text-zinc-100 antialiased min-h-screen pb-28 selection:bg-amber-500 selection:text-black overflow-x-hidden">
 
   <!-- Cintillo promocional -->
-  <div class="w-full bg-gradient-to-r from-red-700 via-amber-600 to-red-700 text-white text-[11px] font-black uppercase tracking-wider py-1.5 px-4 text-center">
-    🔥 ¡AUTÉNTICAS SMASH BURGERS EN LOS OLIVOS! · CARNE 100% ANGUS · DELIVERY VÍA WHATSAPP 🛵
+  <div class="w-full bg-gradient-to-r from-red-700 via-amber-600 to-red-700 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider py-1.5 px-3 text-center truncate">
+    🔥 ¡AUTÉNTICAS SMASH BURGERS EN LOS OLIVOS! · CARNE 100% ANGUS · DELIVERY WHATSAPP 🛵
   </div>
 
-  <!-- Header con tu Logo Oficial -->
-  <header class="sticky top-0 z-40 w-full bg-stone-950/95 backdrop-blur-md border-b border-stone-850 shadow-xl">
-    <div class="max-w-5xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="relative">
-          <img 
-            src="logo.png" 
-            alt="Logo La Bestia Smash" 
-            class="w-11 h-11 sm:w-13 sm:h-13 rounded-full object-contain bg-black border border-amber-400/40 p-1 shadow-lg"
-          />
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-xl sm:text-2xl font-black tracking-tight text-white font-brand">
+  <!-- Header Compacto y Estable para Celulares (Sin desbordes) -->
+  <header class="sticky top-0 z-40 w-full bg-zinc-950/95 backdrop-blur-md border-b border-zinc-800 shadow-xl">
+    <div class="max-w-5xl mx-auto px-3 sm:px-4 h-16 flex items-center justify-between gap-2">
+      <!-- Marca y Logo en 1 sola línea compacta -->
+      <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+        <img 
+          src="logo.png" 
+          alt="Logo La Bestia Smash" 
+          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-contain bg-black border border-amber-400/50 p-0.5 shadow-lg shrink-0" 
+        />
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 flex-nowrap">
+            <span class="text-base sm:text-xl font-black tracking-tight text-white font-brand whitespace-nowrap">
               LA BESTIA <span class="text-amber-400">SMASH</span>
             </span>
-            <span class="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-red-950 border border-red-700 px-2 py-0.5 rounded-full">
+            <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-amber-300 bg-red-950 border border-red-700 px-1.5 py-0.5 rounded-full shrink-0">
               Fast Food
             </span>
           </div>
-          <span class="block text-[11px] text-stone-400 font-medium">Hamburguesas · Alitas · Salchipapas</span>
+          <span class="text-[10px] text-zinc-400 hidden sm:block">Hamburguesas · Alitas · Salchipapas</span>
         </div>
       </div>
 
       <!-- Botón Ver Carrito -->
-      <button id="open-cart-btn" type="button" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-stone-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition-all cursor-pointer">
+      <button id="open-cart-btn" type="button" class="px-3 py-2 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-black text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 active:scale-95 transition-all cursor-pointer shrink-0">
         <i class="fa-solid fa-cart-shopping"></i>
         <span>Mi Pedido</span>
         <span id="header-cart-count" class="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-black">0</span>
@@ -61,41 +60,41 @@
   </header>
 
   <!-- Banner Hero Fast Food -->
-  <section class="relative w-full bg-gradient-to-b from-stone-900/80 via-stone-950 to-black overflow-hidden border-b border-stone-800">
-    <div class="max-w-5xl mx-auto px-4 py-8 sm:py-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-      <div class="md:col-span-7 space-y-4 text-left">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/80 border border-red-700/60 text-[11px] font-bold text-amber-300">
+  <section class="relative w-full bg-gradient-to-b from-zinc-900/90 via-zinc-950 to-black overflow-hidden border-b border-zinc-800">
+    <div class="max-w-5xl mx-auto px-4 py-6 sm:py-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+      <div class="md:col-span-7 space-y-3.5 text-left">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/80 border border-red-700/60 text-[10px] sm:text-xs font-bold text-amber-300">
           <i class="fa-solid fa-fire text-amber-400"></i>
           <span>¡AUTÉNTICAS SMASH BURGERS EN LOS OLIVOS!</span>
         </div>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-white font-brand leading-[1.1]">
+        <h1 class="text-3xl sm:text-5xl font-black text-white font-brand leading-[1.1]">
           Sabor Callejero <br />
           <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-300 to-red-500">100% Bestial</span>
         </h1>
-        <p class="text-sm text-stone-300 max-w-lg leading-relaxed">
+        <p class="text-xs sm:text-sm text-zinc-300 max-w-lg leading-relaxed">
           Carne 100% Angus aplastada en plancha hirviendo con costra ultra crujiente, alitas bañadas en salsa acevichada artesanal y salchipapas monumentales.
         </p>
-        <div class="grid grid-cols-2 gap-2 pt-2 max-w-md text-xs">
-          <div class="p-2.5 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center gap-2">
+        <div class="grid grid-cols-2 gap-2 pt-1 max-w-md text-xs">
+          <div class="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
             <span>🥩</span>
-            <span class="text-stone-200 font-semibold text-[11px]">Carne Angus con costra</span>
+            <span class="text-zinc-200 font-bold text-[11px]">Carne Angus con costra</span>
           </div>
-          <div class="p-2.5 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center gap-2">
+          <div class="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
             <span>🧀</span>
-            <span class="text-stone-200 font-semibold text-[11px]">Doble Cheddar fundido</span>
+            <span class="text-zinc-200 font-bold text-[11px]">Doble Cheddar fundido</span>
           </div>
-          <div class="p-2.5 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center gap-2">
+          <div class="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
             <span>🍗</span>
-            <span class="text-stone-200 font-semibold text-[11px]">Alitas acevichadas</span>
+            <span class="text-zinc-200 font-bold text-[11px]">Alitas acevichadas</span>
           </div>
-          <div class="p-2.5 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center gap-2">
+          <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2">
             <span>🛵</span>
-            <span class="text-amber-300 font-semibold text-[11px]">Delivery WhatsApp</span>
+            <span class="text-amber-300 font-bold text-[11px]">Delivery WhatsApp</span>
           </div>
         </div>
       </div>
       <div class="md:col-span-5 relative">
-        <div class="rounded-3xl overflow-hidden border border-amber-500/20 shadow-2xl bg-stone-900 aspect-[4/3]">
+        <div class="rounded-3xl overflow-hidden border border-amber-500/30 shadow-2xl bg-zinc-900 aspect-[4/3]">
           <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80" alt="Smash Burger" class="w-full h-full object-cover" />
         </div>
       </div>
@@ -103,29 +102,29 @@
   </section>
 
   <!-- Barra de Filtros con pestaña "⭐ Ver Todo" -->
-  <nav class="sticky top-16 sm:top-20 z-30 w-full bg-stone-950/95 backdrop-blur-md border-b border-stone-800 shadow-md">
+  <nav class="sticky top-16 z-30 w-full bg-zinc-950/95 backdrop-blur-md border-b border-zinc-800 shadow-md">
     <div class="max-w-5xl mx-auto px-4 flex items-center gap-2 overflow-x-auto py-3 no-scrollbar">
-      <button data-category="all" class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs sm:text-sm whitespace-nowrap bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 shadow-lg cursor-pointer">
+      <button data-category="all" class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs sm:text-sm whitespace-nowrap bg-gradient-to-r from-amber-400 to-amber-500 text-black shadow-lg cursor-pointer">
         <i class="fa-solid fa-star"></i>
         <span>⭐ Ver Todo</span>
       </button>
-      <button data-category="combos" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap bg-stone-900 text-stone-300 hover:text-white border border-stone-800 cursor-pointer">
+      <button data-category="combos" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800 cursor-pointer">
         <i class="fa-solid fa-crown text-amber-400"></i>
         <span>Combos Bestiales</span>
       </button>
-      <button data-category="hamburguesas" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap bg-stone-900 text-stone-300 hover:text-white border border-stone-800 cursor-pointer">
+      <button data-category="hamburguesas" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800 cursor-pointer">
         <i class="fa-solid fa-burger text-amber-400"></i>
         <span>Smash Burgers</span>
       </button>
-      <button data-category="alitas" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap bg-stone-900 text-stone-300 hover:text-white border border-stone-800 cursor-pointer">
+      <button data-category="alitas" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800 cursor-pointer">
         <i class="fa-solid fa-drumstick-bite text-amber-400"></i>
         <span>Alitas & Antojos</span>
       </button>
-      <button data-category="salchipapas" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap bg-stone-900 text-stone-300 hover:text-white border border-stone-800 cursor-pointer">
+      <button data-category="salchipapas" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800 cursor-pointer">
         <i class="fa-solid fa-utensils text-amber-400"></i>
         <span>Salchipapas</span>
       </button>
-      <button data-category="bebidas" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap bg-stone-900 text-stone-300 hover:text-white border border-stone-800 cursor-pointer">
+      <button data-category="bebidas" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800 cursor-pointer">
         <i class="fa-solid fa-wine-glass text-amber-400"></i>
         <span>Bebidas</span>
       </button>
@@ -139,147 +138,174 @@
 
   <!-- Modal de Personalización -->
   <div id="customize-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
-    <div class="relative w-full max-w-lg bg-stone-900 border border-stone-800 rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
-      <div class="relative h-44 w-full bg-stone-950">
+    <div class="relative w-full max-w-lg bg-zinc-950 border-2 border-zinc-800 rounded-3xl overflow-hidden shadow-2xl max-h-[92vh] flex flex-col">
+      <div class="relative h-44 w-full bg-black">
         <img id="modal-product-img" src="" alt="" class="w-full h-full object-cover" />
-        <button onclick="closeCustomizeModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black">
+        <button onclick="closeCustomizeModal()" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/80 text-white flex items-center justify-center hover:bg-black font-bold">
           ✕
         </button>
       </div>
       <div class="p-5 overflow-y-auto space-y-4 flex-1">
         <div>
-          <h3 id="modal-product-title" class="text-xl font-black text-white font-brand"></h3>
-          <p id="modal-product-desc" class="text-xs text-stone-400 mt-1"></p>
-          <span id="modal-product-price" class="text-sm font-black text-amber-400 mt-2 block"></span>
+          <h3 id="modal-product-title" class="text-xl sm:text-2xl font-black text-white font-brand"></h3>
+          <p id="modal-product-desc" class="text-xs sm:text-sm text-zinc-400 mt-1"></p>
+          <span id="modal-product-price" class="text-base font-black text-amber-400 mt-2 block font-brand"></span>
         </div>
 
         <div id="modal-drink-section" class="space-y-2 hidden">
-          <label class="text-xs font-bold text-stone-200">🥤 Elige tu bebida del combo:</label>
+          <label class="text-xs sm:text-sm font-bold text-zinc-200">🥤 Elige tu bebida del combo:</label>
           <div id="modal-drink-options" class="space-y-1.5"></div>
         </div>
 
         <div id="modal-wing-section" class="space-y-2 hidden">
-          <label class="text-xs font-bold text-stone-200">🍗 Elige tu salsa para alitas:</label>
+          <label class="text-xs sm:text-sm font-bold text-zinc-200">🍗 Elige tu salsa para alitas:</label>
           <div id="modal-wing-options" class="space-y-1.5"></div>
         </div>
 
         <div id="modal-cremas-section" class="space-y-2 hidden">
-          <label class="text-xs font-bold text-stone-200">🥫 Selecciona tus cremas:</label>
+          <label class="text-xs sm:text-sm font-bold text-zinc-200">🥫 Selecciona tus cremas:</label>
           <div id="modal-cremas-options" class="space-y-1.5"></div>
         </div>
 
         <div id="modal-extras-section" class="space-y-2 hidden">
-          <label class="text-xs font-bold text-stone-200">🥓 Agregados adicionales:</label>
+          <label class="text-xs sm:text-sm font-bold text-zinc-200">🥓 Agregados adicionales:</label>
           <div id="modal-extras-options" class="space-y-1.5"></div>
         </div>
 
         <div class="space-y-1">
-          <label class="text-xs font-bold text-stone-200">📝 Indicaciones especiales:</label>
-          <input id="modal-notes" type="text" placeholder="Ej: sin cebolla, papas bien doradas..." class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white" />
+          <label class="text-xs sm:text-sm font-bold text-zinc-200">📝 Indicaciones especiales:</label>
+          <input id="modal-notes" type="text" placeholder="Ej: sin cebolla, papas bien doradas..." class="w-full bg-zinc-900 border-2 border-zinc-700 rounded-2xl px-4 py-3 text-sm text-white" />
         </div>
       </div>
 
-      <div class="p-4 bg-stone-950 border-t border-stone-800 flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3 bg-stone-900 border border-stone-800 px-3 py-1.5 rounded-xl">
-          <button onclick="changeModalQty(-1)" class="text-stone-300 font-bold px-1 text-sm">-</button>
-          <span id="modal-qty" class="text-xs font-black text-white px-2">1</span>
-          <button onclick="changeModalQty(1)" class="text-stone-300 font-bold px-1 text-sm">+</button>
+      <div class="p-4 bg-zinc-900 border-t border-zinc-800 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 bg-black border border-zinc-700 px-3 py-2 rounded-2xl">
+          <button onclick="changeModalQty(-1)" class="text-zinc-300 font-bold px-2 text-base">-</button>
+          <span id="modal-qty" class="text-sm font-black text-white px-2">1</span>
+          <button onclick="changeModalQty(1)" class="text-zinc-300 font-bold px-2 text-base">+</button>
         </div>
-        <button onclick="addCustomizedItemToCart()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-stone-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg">
+        <button onclick="addCustomizedItemToCart()" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-black text-sm flex items-center justify-center gap-2 shadow-lg">
           <span>Agregar al Pedido</span>
-          <span id="modal-total-btn-price" class="bg-stone-950/20 px-2 py-0.5 rounded"></span>
+          <span id="modal-total-btn-price" class="bg-black/20 px-2 py-0.5 rounded font-brand"></span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Drawer del Carrito -->
+  <!-- Drawer del Carrito OPTIMIZADO PARA MÓVILES (Letras Grandes & PLIN) -->
   <div id="cart-drawer" class="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-sm hidden">
-    <div class="relative w-full max-w-md bg-stone-950 border-l border-stone-800 h-full flex flex-col p-5 overflow-y-auto">
-      <div class="flex items-center justify-between border-b border-stone-800 pb-3">
-        <h3 class="text-base font-black text-white font-brand flex items-center gap-2">
-          <i class="fa-solid fa-bag-shopping text-amber-400"></i>
+    <div class="relative w-full max-w-lg bg-zinc-950 border-l border-zinc-800 h-full flex flex-col p-4 sm:p-6 overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+        <h3 class="text-lg font-black text-white font-brand flex items-center gap-2">
+          <i class="fa-solid fa-cart-shopping text-amber-400"></i>
           <span>Mi Pedido</span>
         </h3>
-        <button onclick="closeCartDrawer()" class="text-stone-400 hover:text-white">✕</button>
+        <button onclick="closeCartDrawer()" class="w-9 h-9 rounded-xl bg-zinc-900 text-zinc-400 hover:text-white flex items-center justify-center font-bold">✕</button>
       </div>
 
-      <div id="cart-items-container" class="space-y-3 py-4 flex-1"></div>
+      <!-- Lista de Productos en Carrito -->
+      <div id="cart-items-container" class="space-y-3.5 py-4 flex-1"></div>
 
-      <!-- Formulario de entrega -->
-      <div class="space-y-3 pt-3 border-t border-stone-800 text-xs">
-        <div class="space-y-1">
-          <label class="text-[11px] font-bold text-stone-300">Tipo de entrega:</label>
+      <!-- Formulario con LETRAS E INPUTS MÁS GRANDES -->
+      <div class="space-y-4 pt-3 border-t border-zinc-800">
+        <!-- Tipo de entrega -->
+        <div class="space-y-1.5">
+          <label class="text-xs sm:text-sm font-black text-amber-400 uppercase tracking-wider block">Tipo de entrega:</label>
           <div class="grid grid-cols-2 gap-2">
-            <label class="p-2 rounded-xl bg-stone-900 border border-stone-800 flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="delivery-type" value="delivery" checked />
-              <span>🛵 Delivery</span>
+            <label class="p-3 rounded-2xl bg-zinc-900 border-2 border-zinc-700 flex items-center gap-2 cursor-pointer text-sm font-bold text-white">
+              <input type="radio" name="delivery-type" value="delivery" checked class="w-4 h-4 text-amber-400" />
+              <span>🛵 Delivery (+S/ 5)</span>
             </label>
-            <label class="p-2 rounded-xl bg-stone-900 border border-stone-800 flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="delivery-type" value="pickup" />
+            <label class="p-3 rounded-2xl bg-zinc-900 border-2 border-zinc-700 flex items-center gap-2 cursor-pointer text-sm font-bold text-white">
+              <input type="radio" name="delivery-type" value="pickup" class="w-4 h-4 text-amber-400" />
               <span>🏪 Recojo en local</span>
             </label>
           </div>
         </div>
 
-        <input id="customer-name" type="text" placeholder="Tu Nombre Completo *" class="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-white" />
-        <input id="customer-phone" type="tel" placeholder="Teléfono de contacto" class="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-white" />
-
-        <div id="delivery-address-fields" class="space-y-2">
-          <input id="customer-address" type="text" placeholder="Dirección exacta de entrega *" class="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-white" />
-          <input id="customer-reference" type="text" placeholder="Referencia (ej: frente al parque)" class="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-white" />
+        <!-- Campos de Texto con letras grandes -->
+        <div>
+          <label class="text-xs sm:text-sm font-bold text-zinc-300 block mb-1">Nombre completo *</label>
+          <input id="customer-name" type="text" placeholder="Ej: Kimberly Ramos" class="w-full bg-zinc-900 border-2 border-zinc-700 focus:border-amber-400 rounded-2xl px-4 py-3 text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none" />
         </div>
 
-        <div class="space-y-1">
-          <label class="text-[11px] font-bold text-stone-300">Método de pago:</label>
-          <div class="grid grid-cols-3 gap-2">
-            <label class="p-2 rounded-xl bg-stone-900 border border-stone-800 flex items-center gap-1.5 cursor-pointer text-[11px]">
-              <input type="radio" name="payment-method" value="yape" checked />
-              <span>Yape</span>
-            </label>
-            <label class="p-2 rounded-xl bg-stone-900 border border-stone-800 flex items-center gap-1.5 cursor-pointer text-[11px]">
-              <input type="radio" name="payment-method" value="plin" />
-              <span>Plin</span>
-            </label>
-            <label class="p-2 rounded-xl bg-stone-900 border border-stone-800 flex items-center gap-1.5 cursor-pointer text-[11px]">
-              <input type="radio" name="payment-method" value="bcp" />
-              <span>BCP</span>
-            </label>
+        <div>
+          <label class="text-xs sm:text-sm font-bold text-zinc-300 block mb-1">Teléfono de contacto / WhatsApp</label>
+          <input id="customer-phone" type="tel" placeholder="Ej: 968495402" class="w-full bg-zinc-900 border-2 border-zinc-700 focus:border-amber-400 rounded-2xl px-4 py-3 text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none" />
+        </div>
+
+        <div id="delivery-address-fields" class="space-y-3">
+          <div>
+            <label class="text-xs sm:text-sm font-bold text-zinc-300 block mb-1">Dirección exacta de entrega *</label>
+            <input id="customer-address" type="text" placeholder="Calle / Av, número, piso o depto" class="w-full bg-zinc-900 border-2 border-zinc-700 focus:border-amber-400 rounded-2xl px-4 py-3 text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="text-xs sm:text-sm font-bold text-zinc-300 block mb-1">Referencia</label>
+            <input id="customer-reference" type="text" placeholder="Ej: Frente al parque, portón negro" class="w-full bg-zinc-900 border-2 border-zinc-700 focus:border-amber-400 rounded-2xl px-4 py-3 text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none" />
           </div>
         </div>
 
-        <input id="customer-notes" type="text" placeholder="Observaciones adicionales" class="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-white" />
-
-        <!-- Totales -->
-        <div class="pt-2 border-t border-stone-800 space-y-1">
-          <div class="flex justify-between text-stone-400">
-            <span>Subtotal:</span>
-            <span id="cart-subtotal">S/ 0.00</span>
+        <!-- SECCIÓN EXCLUSIVA DE PAGO: PLIN (968 495 402) -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-cyan-950 via-zinc-900 to-black border-2 border-cyan-500/60 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-8 h-8 rounded-xl bg-cyan-400 text-black font-black text-sm flex items-center justify-center">P</span>
+              <span class="text-sm font-black text-white">Pago con PLIN</span>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Oficial</span>
           </div>
-          <div class="flex justify-between text-stone-400">
+
+          <div class="p-3 rounded-xl bg-black border border-cyan-500/30 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-zinc-400 uppercase tracking-wider block font-bold">Número de Plin:</span>
+              <span class="text-lg font-black text-white font-mono">968 495 402</span>
+            </div>
+            <button type="button" onclick="copyPlinNumber()" class="px-3 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-black text-xs flex items-center gap-1.5 transition-all shadow cursor-pointer">
+              <i class="fa-regular fa-copy"></i>
+              <span id="copy-plin-btn-text">Copiar</span>
+            </button>
+          </div>
+
+          <p class="text-[11px] text-zinc-300 leading-relaxed bg-black/60 p-2.5 rounded-xl border border-zinc-800">
+            👉 <strong>¿Cómo pagar?</strong> Presiona el botón verde de abajo para enviar tu pedido a WhatsApp. En el chat nos adjuntas la captura de tu Plin al <strong>968 495 402</strong> para empezar a cocinarlo al instante.
+          </p>
+        </div>
+
+        <div>
+          <label class="text-xs sm:text-sm font-bold text-zinc-300 block mb-1">Observaciones adicionales</label>
+          <input id="customer-notes" type="text" placeholder="Ej: Salsa aparte, no tocar timbre..." class="w-full bg-zinc-900 border-2 border-zinc-700 focus:border-amber-400 rounded-2xl px-4 py-3 text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none" />
+        </div>
+
+        <!-- Totales Grandes -->
+        <div class="pt-3 border-t border-zinc-800 space-y-1.5 text-sm">
+          <div class="flex justify-between text-zinc-400">
+            <span>Subtotal productos:</span>
+            <span id="cart-subtotal" class="font-bold text-white">S/ 0.00</span>
+          </div>
+          <div class="flex justify-between text-zinc-400">
             <span>Costo de envío:</span>
-            <span id="delivery-cost">S/ 5.00</span>
+            <span id="delivery-cost" class="font-bold text-white">S/ 5.00</span>
           </div>
-          <div class="flex justify-between text-sm font-black text-white pt-1 border-t border-stone-800">
+          <div class="flex justify-between text-lg sm:text-xl font-black text-white pt-2 border-t border-zinc-800">
             <span>Total a Pagar:</span>
-            <span id="cart-total" class="text-amber-400">S/ 0.00</span>
+            <span id="cart-total" class="text-amber-400 font-brand">S/ 0.00</span>
           </div>
         </div>
 
-        <button onclick="submitOrderViaWhatsApp()" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg cursor-pointer">
-          <i class="fa-brands fa-whatsapp text-base"></i>
-          <span>Enviar Pedido a WhatsApp</span>
+        <!-- Botón Gigante de WhatsApp -->
+        <button onclick="submitOrderViaWhatsApp()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-sm sm:text-base uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-2xl shadow-emerald-500/30 active:scale-95 transition-all cursor-pointer">
+          <i class="fa-brands fa-whatsapp text-xl"></i>
+          <span>ENVIAR PEDIDO A WHATSAPP</span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Pie de página -->
-  <footer class="mt-auto pt-8 pb-4 border-t border-stone-900 text-center text-xs text-stone-500 max-w-5xl mx-auto px-4 w-full">
-    <p class="font-brand font-bold text-stone-300 text-sm">
-      LA BESTIA SMASH <span class="font-normal text-stone-400 font-sans text-xs">· Fast Food</span>
+  <footer class="mt-auto pt-8 pb-4 border-t border-zinc-900 text-center text-xs text-zinc-500 max-w-5xl mx-auto px-4 w-full">
+    <p class="font-brand font-bold text-zinc-300 text-sm">
+      LA BESTIA SMASH <span class="font-normal text-zinc-400 font-sans text-xs">· Fast Food</span>
     </p>
-    <p class="text-[11px] text-stone-500 mt-1">
+    <p class="text-[11px] text-zinc-500 mt-1">
       Av. Las Palmeras 830, Los Olivos - Lima · Delivery WhatsApp: 968 495 402
     </p>
   </footer>
