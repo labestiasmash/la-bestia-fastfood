@@ -139,15 +139,15 @@ let MENU_DATA = [
   }
 ];
 
-// Opciones de Configuración
-const WING_SAUCES_LIST = [
+// Opciones de Configuración (Dinámicas desde Google Sheets o por defecto)
+let WING_SAUCES_LIST = [
   'Acevichadas Especiales',
   'BBQ Ahumada',
   'Pasión Maracuyá',
   'Búfalo Picante'
 ];
 
-const CREMAS_OPTIONS = [
+let CREMAS_OPTIONS = [
   'Mayonesa de la casa',
   'Tártara criolla',
   'Ají pollero',
@@ -156,14 +156,14 @@ const CREMAS_OPTIONS = [
   'Mostaza'
 ];
 
-const EXTRAS_OPTIONS = [
-  { id: 'extra_cheddar', name: 'Extra Queso Cheddar', price: 3.00 },
-  { id: 'extra_bacon', name: 'Extra Tocino Crocante', price: 4.00 },
-  { id: 'extra_fries_xl', name: 'Papas XL', price: 5.00 },
-  { id: 'extra_egg', name: 'Huevo Frito', price: 2.00 }
+let EXTRAS_OPTIONS = [
+  { id: 'extra_cheddar', name: 'Extra Queso Cheddar', price: 2.00 },
+  { id: 'extra_bacon', name: 'Extra Tocino Crocante', price: 2.50 },
+  { id: 'extra_fries_xl', name: 'Papas Fritas Adicionales', price: 3.50 },
+  { id: 'extra_egg', name: 'Huevo Frito', price: 1.50 }
 ];
 
-const COMBO_DRINKS_LIST = [
+let COMBO_DRINKS_LIST = [
   'Inca Kola Personal (500ml)',
   'Coca-Cola Original (500ml)',
   'Chicha Morada Casera (500ml)',
@@ -211,7 +211,11 @@ async function loadProductsFromGoogleSheets() {
 
     // Detectar encabezados
     const headers = parseCsvLine(lines[0]).map(h => h.toLowerCase().trim().replace(/[\s_]/g, ''));
-    const parsed = [];
+    const parsedProducts = [];
+    const parsedExtras = [];
+    const parsedWingSauces = [];
+    const parsedCremas = [];
+    const parsedComboDrinks = [];
 
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCsvLine(lines[i]);
@@ -223,8 +227,8 @@ async function loadProductsFromGoogleSheets() {
       // Extraer campos según la hoja:
       // ID | Categoria | Titulo | Descripcion | Precio | Foto_URL | Badge | Disponible
       const id = row['id'] || String(i);
-      const rawCategory = row['categoria'] || row['category'] || '';
-      const title = row['titulo'] || row['title'] || '';
+      const rawCategory = (row['categoria'] || row['category'] || '').trim();
+      const title = (row['titulo'] || row['title'] || '').trim();
       const description = row['descripcion'] || row['description'] || '';
       const price = parseFloat(row['precio'] || row['price'] || '0') || 0;
       const rawFoto = row['fotourl'] || row['foto'] || row['image'] || row['img'] || '';
@@ -234,16 +238,53 @@ async function loadProductsFromGoogleSheets() {
 
       if (!title) continue;
 
-      // Normalizar categoría
-      let category = 'hamburguesas';
       const c = rawCategory.toLowerCase();
+
+      // 1. ¿Es un Extra / Agregado? (Ej: Extra Queso Cheddar, Huevo Frito, Tocino, etc.)
+      if (c === 'extra' || c === 'extras' || c === 'agregado' || c === 'agregados' || c === 'adicional' || c === 'adicionales' || c.startsWith('extra ')) {
+        if (isDisponible) {
+          parsedExtras.push({
+            id: 'extra_' + id,
+            name: title,
+            price: price
+          });
+        }
+        continue;
+      }
+
+      // 2. ¿Es un Sabor/Salsa de Alitas para el selector? (Ej: Acevichada, BBQ, Maracuyá, Búfalo)
+      if (c === 'salsa alita' || c === 'salsas alitas' || c === 'salsa alitas' || c === 'sabor alita' || c === 'sabores alitas' || ((c === 'salsa' || c === 'salsas') && price === 0)) {
+        if (isDisponible) {
+          parsedWingSauces.push(title);
+        }
+        continue;
+      }
+
+      // 3. ¿Es una Crema para hamburguesas / salchipapas? (Ej: Mayonesa, Tártara, Ají pollero, etc.)
+      if (c === 'crema' || c === 'cremas') {
+        if (isDisponible) {
+          parsedCremas.push(title);
+        }
+        continue;
+      }
+
+      // 4. ¿Es una Bebida para los Combos? (Ej: Inca Kola 500ml, Coca Cola, Chicha Morada)
+      if (c === 'bebida combo' || c === 'bebidas combo' || c === 'opcion bebida' || c === 'bebida en combo' || c === 'gaseosa combo') {
+        if (isDisponible) {
+          parsedComboDrinks.push(title);
+        }
+        continue;
+      }
+
+      // 5. De lo contrario, es un PRODUCTO DEL CATÁLOGO (Cards principales para ordenar)
+      let category = 'hamburguesas';
       if (c.includes('combo')) category = 'combos';
       else if (c.includes('alita') || c.includes('antojo')) category = 'alitas';
       else if (c.includes('salchi')) category = 'salchipapas';
-      else if (c.includes('bebida') || c.includes('salsa')) category = 'bebidas';
+      else if (c.includes('bebida') || c.includes('salsa') || c.includes('refresco') || c.includes('gaseosa')) category = 'bebidas';
       else if (c.includes('hamburguesa') || c.includes('burger')) category = 'hamburguesas';
 
-      parsed.push({
+      parsedProducts.push({
         id,
         category,
         itemType: category === 'alitas' ? 'alitas' : category === 'combos' ? 'combo' : category === 'salchipapas' ? 'salchipapa' : category === 'bebidas' ? 'bebida' : 'hamburguesa',
@@ -260,11 +301,38 @@ async function loadProductsFromGoogleSheets() {
       });
     }
 
-    if (parsed.length > 0) {
-      MENU_DATA = parsed;
-      console.log(`✅ Menú sincronizado desde Google Sheets (${parsed.length} productos).`);
-      renderProducts();
+    if (parsedProducts.length > 0) {
+      MENU_DATA = parsedProducts;
+      console.log(`✅ Menú sincronizado desde Google Sheets (${parsedProducts.length} productos).`);
     }
+
+    if (parsedExtras.length > 0) {
+      EXTRAS_OPTIONS = parsedExtras;
+      console.log(`✅ Extras sincronizados desde Google Sheets (${parsedExtras.length} extras con precios personalizados).`);
+    }
+
+    if (parsedWingSauces.length > 0) {
+      WING_SAUCES_LIST = parsedWingSauces;
+      if (!WING_SAUCES_LIST.includes(customizeState.wingSauce)) {
+        customizeState.wingSauce = WING_SAUCES_LIST[0];
+      }
+      console.log(`✅ Salsas de alitas sincronizadas (${parsedWingSauces.length} sabores).`);
+    }
+
+    if (parsedCremas.length > 0) {
+      CREMAS_OPTIONS = parsedCremas;
+      console.log(`✅ Cremas sincronizadas (${parsedCremas.length} cremas).`);
+    }
+
+    if (parsedComboDrinks.length > 0) {
+      COMBO_DRINKS_LIST = parsedComboDrinks;
+      if (!COMBO_DRINKS_LIST.includes(customizeState.drink)) {
+        customizeState.drink = COMBO_DRINKS_LIST[0];
+      }
+      console.log(`✅ Bebidas de combo sincronizadas (${parsedComboDrinks.length} opciones).`);
+    }
+
+    renderProducts();
   } catch (err) {
     console.warn('Aviso: Usando catálogo por defecto (No se pudo conectar a Google Sheets):', err);
   }
