@@ -1,14 +1,18 @@
 /**
  * ==========================================================================
- * LA BESTIA FAST FOOD - Lógica Frontend Vanilla JavaScript
+ * LA BESTIA SMASH - Fast Food (app.js Corregido y Optimizado)
  * ==========================================================================
- * Desarrollado para GitHub Pages (100% estático, con soporte para Google Sheets y Drive)
+ * - Sincronización en vivo con Google Sheets (GVIZ instantáneo sin retraso)
+ * - Corrección de decimales y precios en soles (interpreta 2,5 a 2.50 y S/ 20)
+ * - Enlace directo de fotos de Google Drive
+ * - Adjunta la foto en el pedido de WhatsApp para evitar confusiones
+ * - Solo las 3 cremas exactas de tu hoja (sin salsas inventadas)
  */
 
-// 1. Configuración del Local / Restaurante
+// 1. Configuración del Local
 const RESTAURANT_CONFIG = {
-  name: 'La Bestia Fast Food',
-  // Número oficial para WhatsApp (solo dígitos con código de país 51 de Perú, SIN ESPACIOS)
+  name: 'LA BESTIA SMASH',
+  complement: 'Fast Food',
   phone: '51968495402',
   displayPhone: '968 495 402',
   schedule: 'Lun - Dom: 6:00 PM - 11:30 PM',
@@ -17,29 +21,19 @@ const RESTAURANT_CONFIG = {
   yapeNumber: '968 495 402',
   plinNumber: '968 495 402',
   bcpAccount: '194-98765432-0-88',
-  
-  /**
-   * 📊 ENLACE DE TU GOOGLE SHEET PUBLICADO EN CSV:
-   * Para conectar tu hoja de cálculo:
-   * 1. En Google Sheets ve a: Archivo > Compartir > Publicar en la web.
-   * 2. Elige "Hoja 1" y formato "Valores separados por comas (.csv)".
-   * 3. Pega aquí el enlace resultante (o déjalo vacío para usar el menú local).
-   */
   sheetCsvUrl: localStorage.getItem('la_bestia_sheet_csv') || 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStAjBLrvpS8y2I8QAgzOOl1slg75KEpx23h2hxtb1tkmqZwHKQ9dkR4nfF5gryLeVjxgaiA0rCFBhU/pub?gid=0&single=true&output=csv'
 };
 
-// 2. Función Inteligente para Convertir Enlaces de Google Drive a Imágenes Directas
+// 2. Conversor inteligente de fotos de Google Drive
 function resolveImageUrl(url, category = 'hamburguesas') {
-  if (!url || typeof url !== 'string' || url.trim() === '' || url.includes('...') || !url.startsWith('http')) {
+  if (!url || typeof url !== 'string' || url.trim() === '' || url.includes('...')) {
     if (category === 'bebidas') return 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80';
-    if (category === 'alitas') return 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=700&q=80';
-    if (category === 'salchipapas') return 'https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=700&q=80';
-    return 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80';
+    if (category === 'alitas') return 'https://lh3.googleusercontent.com/d/12JmafB9K4mLf-90s-ZOdaMnopDEhLazB=w1000';
+    if (category === 'salchipapas') return 'https://lh3.googleusercontent.com/d/1Tw0yyO9cYRLntnVYnsXh7Ajg_BKwOry3=w1000';
+    return 'https://lh3.googleusercontent.com/d/1N7SnkQyEr0WgRr7s12Nte_qiMjMVHFaC=w1000';
   }
 
   const clean = url.trim();
-
-  // Detectar enlaces de Google Drive en cualquier formato:
   const driveFileMatch = clean.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
   const driveIdMatch = clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   const driveLh3Match = clean.match(/googleusercontent\.com\/d\/([a-zA-Z0-9_-]+)/);
@@ -48,34 +42,46 @@ function resolveImageUrl(url, category = 'hamburguesas') {
   if (fileId) {
     return `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
   }
-
+  if (/^[a-zA-Z0-9_-]{20,}$/.test(clean)) {
+    return `https://lh3.googleusercontent.com/d/${clean}=w1000`;
+  }
   return clean;
 }
 
-// Conversor de enlaces para Google Sheets (acepta tanto 'Publicar en la web' como el enlace directo 'Compartir')
+// 3. Normalizador de Google Sheets con anti-caché en vivo
 function normalizeSheetCsvUrl(url) {
   if (!url || typeof url !== 'string') return '';
   const clean = url.trim();
-  if (clean.includes('/pub') && clean.includes('output=csv')) {
-    return clean;
-  }
   const match = clean.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
   if (match && match[1]) {
-    return `https://docs.google.com/spreadsheets/d/${match[1]}/gviz/tq?tqx=out:csv`;
+    const gidMatch = clean.match(/[#&?]gid=([0-9]+)/);
+    const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
+    return `https://docs.google.com/spreadsheets/d/${match[1]}/gviz/tq?tqx=out:csv${gidParam}&_nocache=${Date.now()}`;
+  }
+  if (clean.includes('/pub') && clean.includes('output=csv')) {
+    const sep = clean.includes('?') ? '&' : '?';
+    return `${clean}${sep}_nocache=${Date.now()}`;
   }
   return clean;
 }
 
-// 3. Catálogo inicial (con fotos reales sincronizadas de Google Drive)
+// 4. Limpiador de precios robusto (acepta 2.50, 2,50, S/ 20)
+function cleanPrice(val) {
+  if (!val) return 0;
+  const str = String(val).replace(/[sS]\/?\.?/g, '').replace(/\$/g, '').replace(/\s+/g, '').replace(',', '.');
+  const num = parseFloat(str);
+  return isNaN(num) ? 0 : num;
+}
+
+// 5. Catálogo Base con los precios reales de tu Google Sheet
 let MENU_DATA = [
-  // 🔥 COMBOS BESTIALES
   {
     id: '1',
     category: 'combos',
     itemType: 'combo',
     title: 'Combo Dúo Bestia',
     description: '2 Hamburguesas Clásicas + 1 Salchipapa Personal + 2 Bebidas',
-    price: 35.90,
+    price: 20.00,
     image: 'https://lh3.googleusercontent.com/d/1N7SnkQyEr0WgRr7s12Nte_qiMjMVHFaC=w1000',
     badge: 'PROMO',
     disponible: true,
@@ -129,7 +135,7 @@ let MENU_DATA = [
     itemType: 'bebida',
     title: 'Chicha Morada 1L',
     description: 'Chicha natural de la casa helada',
-    price: 10.00,
+    price: 12.00,
     image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=700&q=80',
     badge: '',
     disponible: true,
@@ -139,45 +145,25 @@ let MENU_DATA = [
   }
 ];
 
-// Opciones de Configuración (Dinámicas desde Google Sheets o por defecto)
-let WING_SAUCES_LIST = [
-  'Acevichadas Especiales',
-  'BBQ Ahumada',
-  'Pasión Maracuyá',
-  'Búfalo Picante'
-];
-
-let CREMAS_OPTIONS = [
-  'Mayonesa de la casa',
-  'Tártara criolla',
-  'Ají pollero',
-  'Salsa BBQ',
-  'Ketchup',
-  'Mostaza'
-];
-
+// Opciones estrictas de tu Sheet (Row 14-22)
+let WING_SAUCES_LIST = ['Acevichada Especial', 'BBQ Ahumada', 'Pasion Maracuya'];
+let CREMAS_OPTIONS = ['Mayonesa de la casa', 'Ají Pollero Bestial', 'Tartara criolla'];
 let EXTRAS_OPTIONS = [
-  { id: 'extra_cheddar', name: 'Extra Queso Cheddar', price: 2.00 },
-  { id: 'extra_bacon', name: 'Extra Tocino Crocante', price: 2.50 },
-  { id: 'extra_fries_xl', name: 'Papas Fritas Adicionales', price: 3.50 },
-  { id: 'extra_egg', name: 'Huevo Frito', price: 1.50 }
+  { id: 'extra_10', name: 'Extra Queso Cheddar', price: 2.00 },
+  { id: 'extra_11', name: 'Huevo frito', price: 1.00 },
+  { id: 'extra_12', name: 'Tocino crocante', price: 2.00 },
+  { id: 'extra_13', name: 'Papas fritas chicas', price: 2.50 }
 ];
+let COMBO_DRINKS_LIST = ['Inka Cola 500ml', 'Coca Cola 500ml', 'Chicha Morada 500ml'];
 
-let COMBO_DRINKS_LIST = [
-  'Inca Kola Personal (500ml)',
-  'Coca-Cola Original (500ml)',
-  'Chicha Morada Casera (500ml)',
-  'Coca-Cola Zero (500ml)'
-];
-
-// 4. Estado Global de la App
+// 6. Estado Global
 let currentCategory = 'combos';
 let cart = JSON.parse(localStorage.getItem('la_bestia_cart') || '[]');
 let activeCustomizingProduct = null;
 let customizeState = {
   drink: COMBO_DRINKS_LIST[0],
   wingSauce: WING_SAUCES_LIST[0],
-  cremas: ['Mayonesa de la casa', 'Ají pollero', 'Tártara criolla'],
+  cremas: [], // Inicia vacío: solo se agregan las cremas que el cliente marque
   extras: [],
   quantity: 1,
   notes: ''
@@ -192,24 +178,23 @@ function saveCart() {
   updateCartUI();
 }
 
-// 5. Carga Dinámica desde Google Sheets
+// 7. Carga Dinámica desde Google Sheets
 async function loadProductsFromGoogleSheets() {
   const sheetUrl = normalizeSheetCsvUrl(RESTAURANT_CONFIG.sheetCsvUrl);
   if (!sheetUrl) return;
 
   try {
     const response = await fetch(sheetUrl);
-    if (!response.ok) throw new Error('No se pudo acceder al Google Sheet');
+    if (!response.ok) throw new Error('HTTP ' + response.status);
     const text = await response.text();
 
     if (text.includes('<!DOCTYPE') || text.includes('Sorry, the file you have requested')) {
-      throw new Error('Google devolvió error 404: La hoja aún no está publicada o requiere permiso de lectura público.');
+      throw new Error('Google Sheets requiere permiso público: Compartir > Cualquier persona con el enlace: Lector');
     }
 
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
     if (lines.length < 2) return;
 
-    // Detectar encabezados
     const headers = parseCsvLine(lines[0]).map(h => h.toLowerCase().trim().replace(/[\s_]/g, ''));
     const parsedProducts = [];
     const parsedExtras = [];
@@ -219,70 +204,56 @@ async function loadProductsFromGoogleSheets() {
 
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCsvLine(lines[i]);
+      if (cols.length === 0 || cols.every(c => c === '')) continue;
+
       const row = {};
       headers.forEach((h, idx) => {
         row[h] = (cols[idx] || '').trim();
       });
 
-      // Extraer campos según la hoja:
-      // ID | Categoria | Titulo | Descripcion | Precio | Foto_URL | Badge | Disponible
       const id = row['id'] || String(i);
       const rawCategory = (row['categoria'] || row['category'] || '').trim();
       const title = (row['titulo'] || row['title'] || '').trim();
       const description = row['descripcion'] || row['description'] || '';
-      const price = parseFloat(row['precio'] || row['price'] || '0') || 0;
+      const price = cleanPrice(row['precio'] || row['price'] || '0');
       const rawFoto = row['fotourl'] || row['foto'] || row['image'] || row['img'] || '';
       const badge = row['badge'] || '';
       const rawDisp = (row['disponible'] || 'SI').toUpperCase();
-      const isDisponible = rawDisp === 'SI' || rawDisp === 'TRUE' || rawDisp === '1' || rawDisp === 'DISPONIBLE';
+      const isDisponible = rawDisp === 'SI' || rawDisp === 'TRUE' || rawDisp === '1' || rawDisp === 'DISPONIBLE' || rawDisp === '';
 
       if (!title) continue;
-
       const c = rawCategory.toLowerCase();
 
-      // 1. ¿Es un Extra / Agregado? (Ej: Extra Queso Cheddar, Huevo Frito, Tocino, etc.)
-      if (c === 'extra' || c === 'extras' || c === 'agregado' || c === 'agregados' || c === 'adicional' || c === 'adicionales' || c.startsWith('extra ')) {
-        if (isDisponible) {
-          parsedExtras.push({
-            id: 'extra_' + id,
-            name: title,
-            price: price
-          });
-        }
+      // Extras / Agregados
+      if (c === 'extra' || c === 'extras' || c === 'agregado' || c === 'agregados' || c === 'adicional' || c.startsWith('extra ')) {
+        if (isDisponible) parsedExtras.push({ id: 'extra_' + id, name: title, price });
         continue;
       }
 
-      // 2. ¿Es un Sabor/Salsa de Alitas para el selector? (Ej: Acevichada, BBQ, Maracuyá, Búfalo)
-      if (c === 'salsa alita' || c === 'salsas alitas' || c === 'salsa alitas' || c === 'sabor alita' || c === 'sabores alitas' || ((c === 'salsa' || c === 'salsas') && price === 0)) {
-        if (isDisponible) {
-          parsedWingSauces.push(title);
-        }
+      // Salsas de Alitas
+      if (c === 'salsa' || c === 'salsas' || c.includes('alita') && (c.includes('salsa') || c.includes('sabor'))) {
+        if (isDisponible && !parsedWingSauces.includes(title)) parsedWingSauces.push(title);
         continue;
       }
 
-      // 3. ¿Es una Crema para hamburguesas / salchipapas? (Ej: Mayonesa, Tártara, Ají pollero, etc.)
+      // Cremas
       if (c === 'crema' || c === 'cremas') {
-        if (isDisponible) {
-          parsedCremas.push(title);
-        }
+        if (isDisponible && !parsedCremas.includes(title)) parsedCremas.push(title);
         continue;
       }
 
-      // 4. ¿Es una Bebida para los Combos? (Ej: Inca Kola 500ml, Coca Cola, Chicha Morada)
-      if (c === 'bebida combo' || c === 'bebidas combo' || c === 'opcion bebida' || c === 'bebida en combo' || c === 'gaseosa combo') {
-        if (isDisponible) {
-          parsedComboDrinks.push(title);
-        }
+      // Bebidas Combo
+      if (c === 'bebida combo' || c === 'bebidas combo' || c === 'opcion bebida' || c === 'gaseosa combo') {
+        if (isDisponible && !parsedComboDrinks.includes(title)) parsedComboDrinks.push(title);
         continue;
       }
 
-      // 5. De lo contrario, es un PRODUCTO DEL CATÁLOGO (Cards principales para ordenar)
+      // Platillos principales
       let category = 'hamburguesas';
       if (c.includes('combo')) category = 'combos';
       else if (c.includes('alita') || c.includes('antojo')) category = 'alitas';
       else if (c.includes('salchi')) category = 'salchipapas';
-      else if (c.includes('bebida') || c.includes('salsa') || c.includes('refresco') || c.includes('gaseosa')) category = 'bebidas';
-      else if (c.includes('hamburguesa') || c.includes('burger')) category = 'hamburguesas';
+      else if (c.includes('bebida') || c.includes('refresco') || c.includes('chicha')) category = 'bebidas';
 
       parsedProducts.push({
         id,
@@ -301,65 +272,36 @@ async function loadProductsFromGoogleSheets() {
       });
     }
 
-    if (parsedProducts.length > 0) {
-      MENU_DATA = parsedProducts;
-      console.log(`✅ Menú sincronizado desde Google Sheets (${parsedProducts.length} productos).`);
-    }
-
-    if (parsedExtras.length > 0) {
-      EXTRAS_OPTIONS = parsedExtras;
-      console.log(`✅ Extras sincronizados desde Google Sheets (${parsedExtras.length} extras con precios personalizados).`);
-    }
-
-    if (parsedWingSauces.length > 0) {
-      WING_SAUCES_LIST = parsedWingSauces;
-      if (!WING_SAUCES_LIST.includes(customizeState.wingSauce)) {
-        customizeState.wingSauce = WING_SAUCES_LIST[0];
-      }
-      console.log(`✅ Salsas de alitas sincronizadas (${parsedWingSauces.length} sabores).`);
-    }
-
-    if (parsedCremas.length > 0) {
-      CREMAS_OPTIONS = parsedCremas;
-      console.log(`✅ Cremas sincronizadas (${parsedCremas.length} cremas).`);
-    }
-
-    if (parsedComboDrinks.length > 0) {
-      COMBO_DRINKS_LIST = parsedComboDrinks;
-      if (!COMBO_DRINKS_LIST.includes(customizeState.drink)) {
-        customizeState.drink = COMBO_DRINKS_LIST[0];
-      }
-      console.log(`✅ Bebidas de combo sincronizadas (${parsedComboDrinks.length} opciones).`);
-    }
+    if (parsedProducts.length > 0) MENU_DATA = parsedProducts;
+    if (parsedExtras.length > 0) EXTRAS_OPTIONS = parsedExtras;
+    if (parsedWingSauces.length > 0) WING_SAUCES_LIST = parsedWingSauces;
+    if (parsedCremas.length > 0) CREMAS_OPTIONS = parsedCremas;
+    if (parsedComboDrinks.length > 0) COMBO_DRINKS_LIST = parsedComboDrinks;
 
     renderProducts();
+    console.log('✅ Catálogo sincronizado en tiempo real desde Google Sheets.');
   } catch (err) {
-    console.warn('Aviso: Usando catálogo por defecto (No se pudo conectar a Google Sheets):', err);
+    console.warn('Aviso: usando catálogo base:', err);
   }
 }
 
-// Parser simple para líneas CSV respetando comillas
 function parseCsvLine(line) {
   const result = [];
   let current = '';
   let inQuotes = false;
-
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
+    if (char === '"') inQuotes = !inQuotes;
+    else if (char === ',' && !inQuotes) {
       result.push(current.trim());
       current = '';
-    } else {
-      current += char;
-    }
+    } else current += char;
   }
   result.push(current.trim());
   return result;
 }
 
-// 6. Renderizar Catálogo de Productos
+// 8. Renderizado del Menú
 function renderProducts() {
   const container = document.getElementById('products-grid');
   if (!container) return;
@@ -371,7 +313,7 @@ function renderProducts() {
     container.innerHTML = `
       <div class="col-span-full py-12 text-center text-stone-400 bg-stone-900/40 rounded-2xl border border-stone-800 p-6">
         <i class="fa-solid fa-utensils text-3xl text-stone-600 mb-2"></i>
-        <p class="font-bold text-white text-sm">No hay productos disponibles en esta categoría</p>
+        <p class="font-bold text-white text-sm">No hay productos en esta categoría</p>
       </div>
     `;
     return;
@@ -379,14 +321,13 @@ function renderProducts() {
 
   filtered.forEach(product => {
     const card = document.createElement('article');
-    card.className = 'group relative flex flex-col justify-between bg-stone-900 rounded-2xl overflow-hidden border border-stone-800 hover:border-yellow-400/40 transition-all cursor-pointer shadow-md';
+    card.className = 'group relative flex flex-col justify-between bg-stone-900/90 rounded-2xl overflow-hidden border border-stone-800 hover:border-amber-400/50 transition-all cursor-pointer shadow-lg hover:shadow-amber-500/10';
     card.onclick = () => openCustomizeModal(product.id);
 
+    const isTop = product.badge && (product.badge.toLowerCase().includes('top') || product.badge.toLowerCase().includes('más vendido') || product.badge.toLowerCase().includes('promo'));
     const badgeHtml = product.badge
-      ? `<span class="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-black uppercase tracking-wide shadow-lg ${
-          product.badge.toLowerCase().includes('más vendido') || product.badge.toLowerCase().includes('top')
-            ? 'bg-yellow-400 text-stone-950 shadow-yellow-500/20'
-            : 'bg-red-600 text-white shadow-red-600/30'
+      ? `<span class="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-lg ${
+          isTop ? 'bg-amber-400 text-stone-950 shadow-amber-500/30 font-black' : 'bg-red-600 text-white shadow-red-600/30'
         }"><i class="fa-solid fa-fire text-[10px]"></i> ${product.badge}</span>`
       : '';
 
@@ -397,32 +338,32 @@ function renderProducts() {
           alt="${product.title}" 
           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
           loading="lazy" 
-          onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=700&q=80';"
+          onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80';"
         />
-        <div class="absolute inset-0 bg-gradient-to-t from-stone-950/85 via-transparent to-transparent pointer-events-none"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/20 to-transparent pointer-events-none"></div>
         ${badgeHtml}
         <div class="absolute bottom-2.5 left-2.5 z-10">
-          <span class="inline-block bg-stone-950/95 text-yellow-400 font-black text-sm sm:text-base px-2.5 py-1 rounded-lg border border-yellow-400/30 tabular-nums shadow">
+          <span class="inline-block bg-stone-950/95 text-amber-400 font-black text-sm sm:text-base px-2.5 py-1 rounded-xl border border-amber-400/30 tabular-nums shadow">
             ${formatPrice(product.price)}
           </span>
         </div>
       </div>
       <div class="p-4 flex flex-col flex-1 justify-between gap-3">
         <div>
-          <h3 class="font-bold text-base sm:text-lg text-white group-hover:text-yellow-400 transition-colors leading-snug font-brand">
+          <h3 class="font-bold text-base sm:text-lg text-white group-hover:text-amber-400 transition-colors leading-snug font-brand">
             ${product.title}
           </h3>
-          <p class="text-xs sm:text-sm text-stone-400 mt-1 line-clamp-2 leading-relaxed">
+          <p class="text-xs text-stone-400 mt-1 line-clamp-2 leading-relaxed">
             ${product.description}
           </p>
         </div>
-        <div class="flex items-center justify-between pt-2 border-t border-stone-800/60 mt-auto">
+        <div class="flex items-center justify-between pt-2 border-t border-stone-800/80 mt-auto">
           <div class="text-[11px] text-stone-500">
-            ${product.allowsWingSauce ? '🍗 Salsa · ' : ''}${product.allowsDrink ? '🥤 Bebida · ' : ''}${product.allowsCremas ? '🥫 Cremas' : ''}
+            ${product.allowsWingSauce ? '🍗 Salsa · ' : ''}${product.allowsDrink ? '🥤 Bebida · ' : ''}${product.allowsCremas ? '🥫 Cremas · ' : ''}${product.allowsExtras ? '🥓 Extras' : ''}
           </div>
-          <button type="button" class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-stone-950 font-black text-xs sm:text-sm shadow-md transition-all active:scale-95">
+          <button type="button" class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-stone-950 font-black text-xs shadow-md transition-all active:scale-95">
             <i class="fa-solid fa-plus text-xs"></i>
-            <span>Agregar</span>
+            <span>Pedir</span>
           </button>
         </div>
       </div>
@@ -431,7 +372,7 @@ function renderProducts() {
   });
 }
 
-// 7. Configurar Botones de Categorías
+// 9. Categorías
 function setupCategories() {
   const buttons = document.querySelectorAll('[data-category]');
   buttons.forEach(btn => {
@@ -440,7 +381,7 @@ function setupCategories() {
       buttons.forEach(b => {
         const isCurrent = b === btn;
         b.className = isCurrent
-          ? 'flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap shrink-0 transition-all bg-gradient-to-r from-yellow-400 to-amber-500 text-stone-950 shadow-lg shadow-amber-500/20'
+          ? 'flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap shrink-0 transition-all bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 shadow-lg shadow-amber-500/20'
           : 'flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap shrink-0 transition-all bg-stone-900 text-stone-300 hover:text-white border border-stone-800';
       });
       renderProducts();
@@ -448,17 +389,17 @@ function setupCategories() {
   });
 }
 
-// 8. Modal de Personalización
+// 10. Modal de Personalización
 function openCustomizeModal(productId) {
   const product = MENU_DATA.find(p => p.id === productId);
   if (!product) return;
   activeCustomizingProduct = product;
 
-  // Reset del estado
+  // Inicia sin cremas marcadas (para agregar solo lo que el cliente pida)
   customizeState = {
     drink: COMBO_DRINKS_LIST[0],
     wingSauce: WING_SAUCES_LIST[0],
-    cremas: ['Mayonesa de la casa', 'Ají pollero', 'Tártara criolla'],
+    cremas: [],
     extras: [],
     quantity: 1,
     notes: ''
@@ -468,36 +409,32 @@ function openCustomizeModal(productId) {
   document.getElementById('modal-product-title').innerText = product.title;
   document.getElementById('modal-product-baseprice').innerText = `${formatPrice(product.price)} base`;
 
-  // Renderizar Alitas (Selector de Sabor)
   const wingSec = document.getElementById('customize-wings-section');
-  if (product.allowsWingSauce) {
+  if (product.allowsWingSauce && WING_SAUCES_LIST.length > 0) {
     wingSec.classList.remove('hidden');
     renderWingSauceOptions();
   } else {
     wingSec.classList.add('hidden');
   }
 
-  // Renderizar Bebida (Para Combos)
   const drinkSec = document.getElementById('customize-drink-section');
-  if (product.allowsDrink) {
+  if (product.allowsDrink && COMBO_DRINKS_LIST.length > 0) {
     drinkSec.classList.remove('hidden');
     renderDrinkOptions();
   } else {
     drinkSec.classList.add('hidden');
   }
 
-  // Renderizar Cremas (Hamburguesas y Salchipapas)
   const cremasSec = document.getElementById('customize-cremas-section');
-  if (product.allowsCremas) {
+  if (product.allowsCremas && CREMAS_OPTIONS.length > 0) {
     cremasSec.classList.remove('hidden');
     renderCremasOptions();
   } else {
     cremasSec.classList.add('hidden');
   }
 
-  // Renderizar Extras (+S/ 3.00, +S/ 4.00, +S/ 5.00, +S/ 2.00)
   const extraSec = document.getElementById('customize-extras-section');
-  if (product.allowsExtras) {
+  if (product.allowsExtras && EXTRAS_OPTIONS.length > 0) {
     extraSec.classList.remove('hidden');
     renderExtrasOptions();
   } else {
@@ -528,12 +465,12 @@ function renderWingSauceOptions() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
-      isSelected ? 'bg-yellow-500/15 border-yellow-400 text-white font-bold' : 'bg-stone-950/60 border-stone-800 text-stone-300'
+      isSelected ? 'bg-amber-500/15 border-amber-400 text-white font-bold' : 'bg-stone-950/70 border-stone-800 text-stone-300'
     }`;
     btn.innerHTML = `
-      <span class="text-xs">${sauce}</span>
+      <span class="text-xs truncate">${sauce}</span>
       <div class="w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-        isSelected ? 'border-yellow-400 bg-yellow-400 text-stone-950' : 'border-stone-600'
+        isSelected ? 'border-amber-400 bg-amber-400 text-stone-950' : 'border-stone-600'
       }">
         ${isSelected ? '<i class="fa-solid fa-check text-[9px] font-black"></i>' : ''}
       </div>
@@ -554,12 +491,12 @@ function renderDrinkOptions() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
-      isSelected ? 'bg-yellow-500/15 border-yellow-400 text-white font-semibold' : 'bg-stone-950/60 border-stone-800 text-stone-300'
+      isSelected ? 'bg-amber-500/15 border-amber-400 text-white font-semibold' : 'bg-stone-950/70 border-stone-800 text-stone-300'
     }`;
     btn.innerHTML = `
-      <span class="text-xs sm:text-sm">${drink}</span>
+      <span class="text-xs sm:text-sm truncate">${drink}</span>
       <div class="w-4 h-4 rounded-full border flex items-center justify-center ${
-        isSelected ? 'border-yellow-400 bg-yellow-400 text-stone-950' : 'border-stone-600'
+        isSelected ? 'border-amber-400 bg-amber-400 text-stone-950' : 'border-stone-600'
       }">
         ${isSelected ? '<i class="fa-solid fa-check text-[9px] font-black"></i>' : ''}
       </div>
@@ -579,16 +516,16 @@ function renderCremasOptions() {
     const isChecked = customizeState.cremas.includes(crema);
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = `flex items-center gap-2 p-2 rounded-xl border text-left transition-all ${
-      isChecked ? 'bg-stone-800 border-yellow-500/70 text-white font-medium' : 'bg-stone-950/60 border-stone-800 text-stone-400'
+    btn.className = `flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all ${
+      isChecked ? 'bg-stone-800 border-amber-500/70 text-white font-medium' : 'bg-stone-950/60 border-stone-800 text-stone-400'
     }`;
     btn.innerHTML = `
       <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
-        isChecked ? 'bg-yellow-400 border-yellow-400 text-stone-950' : 'border-stone-600'
+        isChecked ? 'bg-amber-400 border-amber-400 text-stone-950' : 'border-stone-600'
       }">
         ${isChecked ? '<i class="fa-solid fa-check text-[9px] font-bold"></i>' : ''}
       </div>
-      <span class="text-xs">${crema}</span>
+      <span class="text-xs truncate">${crema}</span>
     `;
     btn.onclick = () => {
       if (isChecked) {
@@ -610,18 +547,18 @@ function renderExtrasOptions() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
-      isChecked ? 'bg-yellow-500/15 border-yellow-400 text-white font-bold' : 'bg-stone-950/60 border-stone-800 text-stone-300'
+      isChecked ? 'bg-amber-500/15 border-amber-400 text-white font-bold' : 'bg-stone-950/60 border-stone-800 text-stone-300'
     }`;
     btn.innerHTML = `
       <div class="flex items-center gap-2.5">
         <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
-          isChecked ? 'bg-yellow-400 border-yellow-400 text-stone-950' : 'border-stone-600'
+          isChecked ? 'bg-amber-400 border-amber-400 text-stone-950' : 'border-stone-600'
         }">
           ${isChecked ? '<i class="fa-solid fa-check text-[9px] font-bold"></i>' : ''}
         </div>
-        <span class="text-xs sm:text-sm">${extra.name}</span>
+        <span class="text-xs sm:text-sm font-medium">${extra.name}</span>
       </div>
-      <span class="text-xs font-bold text-yellow-400 tabular-nums">+${formatPrice(extra.price)}</span>
+      <span class="text-xs font-bold text-amber-400 tabular-nums">+${formatPrice(extra.price)}</span>
     `;
     btn.onclick = () => {
       if (isChecked) {
@@ -693,7 +630,7 @@ function setupCustomizeHandlers() {
   };
 }
 
-// 9. Carrito Flotante y Drawer
+// 11. Carrito Flotante y Drawer
 function updateCartUI() {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
@@ -701,7 +638,11 @@ function updateCartUI() {
   const deliveryFee = isDelivery ? RESTAURANT_CONFIG.deliveryCost : 0;
   const total = subtotal + deliveryFee;
 
-  // Floating sticky bottom bar
+  // Actualiza contador en header
+  const headerCount = document.getElementById('header-cart-count');
+  if (headerCount) headerCount.innerText = totalItems;
+
+  // Barra flotante inferior
   const floatingBar = document.getElementById('floating-cart-bar');
   if (totalItems > 0) {
     floatingBar.classList.remove('hidden');
@@ -711,7 +652,6 @@ function updateCartUI() {
     floatingBar.classList.add('hidden');
   }
 
-  // Drawer items render
   renderCartDrawerItems(subtotal, deliveryFee, total);
 }
 
@@ -738,11 +678,11 @@ function renderCartDrawerItems(subtotal, deliveryFee, total) {
     itemCard.className = 'p-3 rounded-xl bg-stone-950/80 border border-stone-800 space-y-2';
 
     let optionsHtml = '';
-    if (item.options.wingSauce) optionsHtml += `<p class="text-yellow-300">🍗 Salsa: ${item.options.wingSauce}</p>`;
+    if (item.options.wingSauce) optionsHtml += `<p class="text-amber-300">🍗 Salsa: ${item.options.wingSauce}</p>`;
     if (item.options.drink) optionsHtml += `<p>🥤 Bebida: ${item.options.drink}</p>`;
     if (item.options.cremas?.length) optionsHtml += `<p>🥫 Cremas: ${item.options.cremas.join(', ')}</p>`;
     if (item.options.extras?.length) {
-      optionsHtml += `<p>🥓 Extras: ${item.options.extras.map(e => `${e.name} (+${formatPrice(e.price)})`).join(', ')}</p>`;
+      optionsHtml += `<p class="text-amber-200">🥓 Extras: ${item.options.extras.map(e => `${e.name} (+${formatPrice(e.price)})`).join(', ')}</p>`;
     }
     if (item.options.notes) optionsHtml += `<p class="italic text-stone-500">📝 "${item.options.notes}"</p>`;
 
@@ -753,11 +693,11 @@ function renderCartDrawerItems(subtotal, deliveryFee, total) {
             src="${resolveImageUrl(item.image)}" 
             alt="${item.title}" 
             class="w-12 h-12 rounded-lg object-cover border border-stone-800 shrink-0" 
-            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=700&q=80';"
+            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=700&q=80';"
           />
           <div>
             <h4 class="font-bold text-sm text-white font-brand">${item.title}</h4>
-            <span class="text-xs text-yellow-400 font-bold">${formatPrice(item.unitPrice)} c/u</span>
+            <span class="text-xs text-amber-400 font-bold">${formatPrice(item.unitPrice)} c/u</span>
           </div>
         </div>
         <button type="button" class="text-stone-500 hover:text-red-400 p-1 text-xs" onclick="removeCartItem('${item.cartItemId}')">
@@ -781,7 +721,6 @@ function renderCartDrawerItems(subtotal, deliveryFee, total) {
     container.appendChild(itemCard);
   });
 
-  // Totales
   document.getElementById('summary-subtotal').innerText = formatPrice(subtotal);
   document.getElementById('summary-delivery').innerText = deliveryFee > 0 ? formatPrice(deliveryFee) : 'Gratis / Recojo';
   document.getElementById('summary-total').innerText = formatPrice(total);
@@ -817,7 +756,7 @@ function closeCartDrawer() {
   setTimeout(() => drawer.classList.add('hidden'), 300);
 }
 
-// 10. Envío por WhatsApp (CORREGIDO PARA EVITAR ERROR 404)
+// 12. Envío por WhatsApp con Foto de Drive de cada Producto
 function submitOrderViaWhatsApp() {
   if (cart.length === 0) return;
 
@@ -829,7 +768,6 @@ function submitOrderViaWhatsApp() {
   const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
   const generalNotes = document.getElementById('customer-notes').value.trim();
 
-  // Validación
   if (!nameInput.value.trim()) {
     alert('Por favor ingresa tu nombre completo.');
     nameInput.focus();
@@ -845,95 +783,67 @@ function submitOrderViaWhatsApp() {
   const deliveryFee = isDelivery ? RESTAURANT_CONFIG.deliveryCost : 0;
   const total = subtotal + deliveryFee;
 
-  const fire = '\u{1F525}';
-  const user = '\u{1F464}';
-  const phone = '\u{1F4F1}';
-  const moto = '\u{1F6F5}';
-  const pin = '\u{1F4CD}';
-  const search = '\u{1F50D}';
-  const store = '\u{1F3EA}';
-  const cardIcon = '\u{1F4B3}';
-  const clip = '\u{1F4CB}';
-  const link = '\u{1F517}';
-  const wing = '\u{1F357}';
-  const cup = '\u{1F964}';
-  const sauce = '\u{1F96B}';
-  const bacon = '\u{1F953}';
-  const note = '\u{1F4DD}';
-  const arrow = '\u{1F449}';
-  const money = '\u{1F4B0}';
-  const chat = '\u{1F4AC}';
-  const cam = '\u{1F4F8}';
-  const rocket = '\u{1F680}';
-  const globe = '\u{1F310}';
-
   const sep = '----------------------------------------';
 
   let lines = [
-    `${fire} *NUEVO PEDIDO - ${RESTAURANT_CONFIG.name.toUpperCase()}* ${fire}`,
+    `🔥 *NUEVO PEDIDO - ${RESTAURANT_CONFIG.name} (${RESTAURANT_CONFIG.complement})* 🔥`,
     sep,
-    `${globe} *Menú Web:* https://labestiasmash.github.io/la-bestia-fastfood/`,
-    sep,
-    `${user} *Cliente:* ${nameInput.value.trim()}`
+    `👤 *Cliente:* ${nameInput.value.trim()}`
   ];
 
   if (phoneInput.value.trim()) {
-    lines.push(`${phone} *Teléfono:* ${phoneInput.value.trim()}`);
+    lines.push(`📱 *Teléfono:* ${phoneInput.value.trim()}`);
   }
 
-  lines.push(`${moto} *Tipo de entrega:* ${isDelivery ? 'Delivery a Domicilio' : 'Recojo en Local'}`);
+  lines.push(`🛵 *Tipo de entrega:* ${isDelivery ? 'Delivery a Domicilio' : 'Recojo en Local'}`);
 
   if (isDelivery) {
-    lines.push(`${pin} *Dirección:* ${addressInput.value.trim()}`);
+    lines.push(`📍 *Dirección:* ${addressInput.value.trim()}`);
     if (referenceInput.value.trim()) {
-      lines.push(`${search} *Referencia:* ${referenceInput.value.trim()}`);
+      lines.push(`🔍 *Referencia:* ${referenceInput.value.trim()}`);
     }
   } else {
-    lines.push(`${store} *Lugar de recojo:* ${RESTAURANT_CONFIG.pickupAddress}`);
+    lines.push(`🏪 *Lugar de recojo:* ${RESTAURANT_CONFIG.pickupAddress}`);
   }
 
   const paymentLabels = { yape: 'Yape', plin: 'Plin', bcp: 'Transferencia BCP' };
-  lines.push(`${cardIcon} *Método de pago:* ${paymentLabels[paymentMethod] || paymentMethod}`);
+  lines.push(`💳 *Método de pago:* ${paymentLabels[paymentMethod] || paymentMethod}`);
   lines.push(sep);
-  lines.push(`${clip} *DESGLOSE DEL PEDIDO:*`);
+  lines.push(`📋 *DESGLOSE DEL PEDIDO:*`);
   lines.push('');
 
   cart.forEach((item, idx) => {
     lines.push(`${idx + 1}. *${item.quantity}x ${item.title}* (${formatPrice(item.unitPrice)} c/u)`);
-    if (item.image && typeof item.image === 'string' && item.image.startsWith('http')) {
-      lines.push(`   ${link} *Foto:* ${item.image}`);
+    // Enlace de foto directo de Drive
+    if (item.image && typeof item.image === 'string' && item.image.trim()) {
+      lines.push(`   🖼️ *Foto:* ${item.image}`);
     }
-    if (item.options.wingSauce) lines.push(`   ${wing} *Sabor Alitas:* ${item.options.wingSauce}`);
-    if (item.options.drink) lines.push(`   ${cup} *Bebida:* ${item.options.drink}`);
-    if (item.options.cremas?.length) lines.push(`   ${sauce} *Cremas:* ${item.options.cremas.join(', ')}`);
-    if (item.options.extras?.length) {
-      lines.push(`   ${bacon} *Agregados:* ${item.options.extras.map(e => `${e.name} (+${formatPrice(e.price)})`).join(', ')}`);
+    if (item.options.wingSauce) lines.push(`   🍗 *Salsa:* ${item.options.wingSauce}`);
+    if (item.options.drink) lines.push(`   🥤 *Bebida:* ${item.options.drink}`);
+    if (item.options.cremas && item.options.cremas.length > 0) {
+      lines.push(`   🥫 *Cremas:* ${item.options.cremas.join(', ')}`);
     }
-    if (item.options.notes) lines.push(`   ${note} *Nota:* ${item.options.notes}`);
-    lines.push(`   ${arrow} *Subtotal:* ${formatPrice(item.unitPrice * item.quantity)}`);
+    if (item.options.extras && item.options.extras.length > 0) {
+      lines.push(`   🥓 *Agregados:* ${item.options.extras.map(e => `${e.name} (+${formatPrice(e.price)})`).join(', ')}`);
+    }
+    if (item.options.notes) lines.push(`   📝 *Nota:* ${item.options.notes}`);
+    lines.push(`   👉 *Subtotal:* ${formatPrice(item.unitPrice * item.quantity)}`);
     lines.push('');
   });
 
   lines.push(sep);
   lines.push(`Subtotal productos: ${formatPrice(subtotal)}`);
   if (isDelivery) lines.push(`Costo de envío: ${formatPrice(deliveryFee)}`);
-  lines.push(`${money} *TOTAL A PAGAR: ${formatPrice(total)}*`);
+  lines.push(`💰 *TOTAL A PAGAR: ${formatPrice(total)}*`);
   lines.push(sep);
 
   if (generalNotes) {
     lines.push('');
-    lines.push(`${chat} *Observaciones:*`);
-    lines.push(generalNotes);
+    lines.push(`💬 *Observaciones:* ${generalNotes}`);
   }
 
   lines.push('');
-  if (paymentMethod === 'yape' || paymentMethod === 'plin') {
-    lines.push(`${cam} _*IMPORTANTE:* Adjunto la captura del comprobante de ${paymentMethod.toUpperCase()} a continuación antes de preparar mi pedido._ ${rocket}`);
-  } else if (paymentMethod === 'bcp') {
-    lines.push(`${cam} _*IMPORTANTE:* Adjunto la constancia de transferencia BCP a continuación antes de preparar mi pedido._ ${rocket}`);
-  } else {
-    lines.push(`¡Muchas gracias! Quedo a la espera de la confirmación de mi orden.`);
-  }
+  lines.push(`📸 _*IMPORTANTE:* Adjunto la captura del comprobante antes de preparar mi pedido._ 🚀`);
 
   const msg = lines.join('\n');
   const cleanPhone = String(RESTAURANT_CONFIG.phone).replace(/\D/g, '');
@@ -941,7 +851,7 @@ function submitOrderViaWhatsApp() {
   window.open(waUrl, '_blank');
 }
 
-// 11. Modal para Administrar Enlace de Google Sheets en Vivo
+// 13. Sincronizador de Google Sheets (Acceso oculto para el dueño)
 function setupGoogleSheetsManager() {
   const syncBtn = document.getElementById('open-sheets-config-btn');
   if (!syncBtn) return;
@@ -949,7 +859,7 @@ function setupGoogleSheetsManager() {
   syncBtn.addEventListener('click', () => {
     const currentUrl = RESTAURANT_CONFIG.sheetCsvUrl || '';
     const newUrl = prompt(
-      '📊 Conexión con Google Sheets:\n\nPega aquí el enlace de tu Google Sheet publicado como CSV:\n(Archivo > Compartir > Publicar en la web > Formato CSV)',
+      '📊 Conexión con Google Sheets:\n\nPega aquí el enlace de tu Google Sheet:\n(Compartir > Cualquier persona con el enlace: Lector)',
       currentUrl
     );
 
@@ -961,15 +871,12 @@ function setupGoogleSheetsManager() {
       if (cleanUrl) {
         alert('🔄 Sincronizando productos desde tu Google Sheet...');
         loadProductsFromGoogleSheets();
-      } else {
-        alert('Se restableció el menú por defecto.');
-        location.reload();
       }
     }
   });
 }
 
-// 12. Inicialización general
+// 14. Inicialización
 document.addEventListener('DOMContentLoaded', () => {
   setupCategories();
   renderProducts();
@@ -977,20 +884,18 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCartUI();
   setupGoogleSheetsManager();
 
-  // Cargar Google Sheets si hay URL configurada
   if (RESTAURANT_CONFIG.sheetCsvUrl) {
     loadProductsFromGoogleSheets();
   }
 
-  // Event Listeners
   document.getElementById('floating-cart-bar')?.addEventListener('click', openCartDrawer);
+  document.getElementById('open-cart-btn')?.addEventListener('click', openCartDrawer);
   document.getElementById('close-drawer-btn')?.addEventListener('click', closeCartDrawer);
   document.getElementById('close-modal-btn')?.addEventListener('click', closeCustomizeModal);
   document.getElementById('drawer-backdrop')?.addEventListener('click', closeCartDrawer);
   document.getElementById('modal-backdrop')?.addEventListener('click', closeCustomizeModal);
   document.getElementById('submit-order-whatsapp-btn')?.addEventListener('click', submitOrderViaWhatsApp);
 
-  // Delivery toggle
   const deliveryRadios = document.querySelectorAll('input[name="delivery-type"]');
   deliveryRadios.forEach(radio => {
     radio.addEventListener('change', () => {
@@ -1004,7 +909,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Copiar números de pago
   document.getElementById('copy-yape-btn')?.addEventListener('click', () => {
     navigator.clipboard.writeText(RESTAURANT_CONFIG.yapeNumber);
     alert(`¡Número ${RESTAURANT_CONFIG.yapeNumber} copiado para Yape / Plin!`);
